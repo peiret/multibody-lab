@@ -1,22 +1,22 @@
 classdef Body < handle
 properties
     
-    name = ""
-    fixed
+    name            string
+    fixed           logical
     
-    mass
-    inertia
-    com
+    mass            double
+    inertia         double
+    com             (2,1) double
 
     % Appearance Properties
-    geometry = struct('points', [], 'lineColor', '', 'lineWidth', 0);
+    geometry        = struct('points', [], 'lineColor', '', 'lineWidth', 0);
 
     % Kinematics
-    position
-    velocity
+    position        (2,1) double
+    velocity        (2,1) double
     
-    angle
-    angVel
+    angle           double
+    angVel          double
 end
 
 methods

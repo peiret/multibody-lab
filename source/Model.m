@@ -2,21 +2,24 @@ classdef Model < handle
 %%
 properties
     %%
-
-    name            = "";
-	nBodies         = 0;
-	nJoints         = 0;
-    nConstraints    = 0;
-    nCoordinates    = 0;
-
-	gravity         = [0, 9.81];
-
-    bodySet         = Body();
-	jointSet        = Joint();
-    coordinateSet   = Coordinate();
     
-    ground
+    system          System
+    viewer          Viewer
 
+    name            string
+	nBodies         double
+	nJoints         double
+    nConstraints    double
+    nCoordinates    double
+
+    bodySet         Body
+	jointSet        Joint
+    coordinateSet   Coordinate
+    
+    ground          Body
+	gravity         (2,1) double
+    
+    
 end
 
 methods
@@ -27,13 +30,16 @@ methods
 
         M.name = "model";
 
-        M.nBodies = 0;
-        M.nJoints = 0;
-        M.gravity = [0; -9.81];
+        M.nBodies           = 0;
+        M.nJoints           = 0;
+        M.nCoordinates      = 0;
+        M.nConstraints      = 0;
         
-        M.ground = Body();
-        M.ground.name = "ground";
-        M.ground.fixed = true;
+        M.ground            = Body();
+        M.ground.name       = "ground";
+        M.ground.fixed      = true;
+        
+        M.gravity           = [0; -9.81];
     end
 
     function initializeModel(M)
@@ -61,6 +67,32 @@ methods
             error("System constraints and coordinates are redundant");
         end
 
+    end
+    
+    function system = initSystem(M)
+        %%
+        
+        system = System(M);
+        system.initSystem();
+        
+        M.system = system;
+    end
+    
+    function viewer = initViewer(M, xLim, yLim)
+        %%
+        
+        viewer = Viewer(M);
+        viewer.initViewer();
+        
+        if exist("xLim", "var")
+            viewer.axes.XLim = xLim;
+        end
+        
+        if exist("yLim", "var")
+            viewer.axes.YLim = yLim;
+        end
+        
+        M.viewer = viewer;
     end
 
     function printReport(M)

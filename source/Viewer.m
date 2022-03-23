@@ -7,9 +7,6 @@ properties
     figure
     axes
     
-    xLim
-    yLim
-    
     shapes = gobjects(0)
     
     
@@ -33,9 +30,6 @@ methods
         %axis(V.axes, 'off');
         
         V.initViewer();
-        
-        V.xLim = V.axes.XLim;
-        V.yLim = V.axes.YLim;
         
     end
     
