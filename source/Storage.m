@@ -50,8 +50,12 @@ methods
     
     function save(Sto, fileName)
         %%
-        
+        [dir,name,ext] = fileparts(fileName);
+        % check extension
         % TO-DO save data to file
+        
+        % generate header
+        
     end
 end
 end

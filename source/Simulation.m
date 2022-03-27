@@ -8,8 +8,9 @@ properties
     viewer          Viewer
     storage         Storage
     
-    integrator      % "EulerForward", "ode45", ...
+    integrator      string % "Euler", "ode45", ...
     
+    time            double
     timeStart       double
     timeEnd         double
     timeStep        double
@@ -19,12 +20,16 @@ methods
     function Sim = Simulation(model)
         %% Constructor of the Simulation class
         
-        Sim.model           = model;
-        Sim.system          = model.initSystem();
-        Sim.viewer          = model.viewer;
+        Sim.model = model;
+        Sim.viewer = model.viewer;
+        
+        if isempty(model.system)
+            Sim.system = model.initSystem();
+        else
+            Sim.system = model.system;
+        end
         
         Sim.integrator      = "none";
-        
         Sim.timeStart       = 0;
         Sim.timeEnd         = 0;
         Sim.timeStep        = 0;
@@ -36,18 +41,54 @@ methods
         
     end
     
-    function done = run(Sim)
+    function run(Sim)
         %% RunSimulation
         %	Returns whether or not the simulation succeeded
-        done = false;
-        while Sim.step()
-            Sim.storage()
+        while Sim.time < Sim.timeEnd
+            Sim.step();
+            Sim.storage.saveStep();
+            
+            if ~isempty(Sim.viewer) && ishandle(Sim.viewer.figure)
+                Sim.viewer.update();
+            end
         end
         
     end
     
-    function done = step(Sim)
-        done = false;
+    function step(Sim)
+        %%
+        if strcmp(Sim.integrator, "Euler")
+            Sim.stepEuler();
+            
+        elseif strcmp(Sim.integrator, "ode45")
+            Sim.stepMatlab();
+            
+        else
+            error("Integrator not compatible.");
+        end
+    end
+    
+    
+    function stepEuler(Sim)
+        %%
+        sys = Sim.system;
+        
+        sys.updateSysDynamics();
+        
+        M = sys.mass;
+        f = sys.force;
+        c = sys.coriolis;
+        
+        qdd = M \ (f - c);
+        
+        % update sys.cooDep 
+        
+    end
+    
+    
+    function stepMatlab(Sim)
+        %%
+        
     end
     
     function storage = initStorage(Sim)

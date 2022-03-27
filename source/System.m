@@ -21,7 +21,7 @@ properties
 
     mass % mass matrix
     coriolis % velocity dependant terms
-    forces % generalized applied forces
+    force % generalized applied forces
 
     conPos % position-level contstraints
     conVel % velocity-level contstraints
@@ -171,6 +171,26 @@ methods
         %% Update system dynamic equations (mass matrix, forces, etc.)
         
         % TO-DO
+        m1 = S.model.bodySet(1).mass;
+        m2 = S.model.bodySet(2).mass;
+        I1 = S.model.bodySet(1).inertia;
+        I2 = S.model.bodySet(2).inertia;
+        L1 = norm(S.model.bodySet(1).geometry.points(:,1) - S.model.bodySet(1).geometry.points(:,2));
+        L2 = norm(S.model.bodySet(2).geometry.points(:,1) - S.model.bodySet(2).geometry.points(:,2));
+        
+        g = - S.model.gravity(2);
+        
+        S.mass = [...
+            I1 + (L1^2*m1)/4 + L1^2*m2,     (L1*L2*m2*cos(th1 - th2))/2;
+            (L1*L2*m2*cos(th1 - th2))/2,   	(m2*L2^2)/4 + I2];
+        
+        S.coriolis = [...
+            (L1*L2*dth2^2*m2*sin(th1 - th2))/2;
+            -(L1*L2*dth1^2*m2*sin(th1 - th2))/2];
+        
+        S.force = [...
+            - L1*g*m1*sin(th1) - L1*g*m2*sin(th1);
+            -L2*g*m2*sin(th2)];
         
     end
     
