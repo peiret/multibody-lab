@@ -16,7 +16,7 @@ methods
     function V = Viewer(model)
         %% Viewer of a mutlibody model
         
-        V.model     = model;
+        V.model = model;
         
         V.figure                = figure;
         V.figure.Units          = 'normalized';
@@ -28,8 +28,6 @@ methods
         hold(V.axes, 'on');
         axis(V.axes, 'equal');
         %axis(V.axes, 'off');
-        
-        V.initViewer();
         
     end
     

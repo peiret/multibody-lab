@@ -3,22 +3,30 @@ classdef Coordinate < handle
 
 properties
     
-    name = "";
-    component % = "Body", "Joint"
-    type % = "angular", "cartesian"
+    name                string
+    component           string % = "Body", "Joint"
+    type                string % = "angular", "cartesian"
     
     % only one is necessary
-    body
-    joint
+    body                Body
+    joint               Joint
     
-    point % on body
-    direction % on ground
+    point               (2,1) double % on body
+    direction           (2,1) double % on ground
+    
+    initialPos          double
+    initialVel          double
     
 end
 
 methods
     function C = Coordinate()
         %% Coorinate class constructor
+        
+        C.point       = [0; 0];
+        C.direction   = [0; 0];
+        C.initialPos  = 0;
+        C.initialVel  = 0;
         
     end
     

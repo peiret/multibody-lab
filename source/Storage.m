@@ -17,13 +17,14 @@ methods
     end
     
     function addVariable(Sto, varName)
-        %%
+        %% Add varible to variables
         Sto.variables(end + 1) = string(varName);
     end
     
     function initData(Sto, nSteps)
         %% Initialize Data structure and preallocate memory
-        nVal = 0;
+        
+        nVal = 1; % always store time
         for varName = Sto.variables
             nVal = nVal + numel(Sto.system.(varName));
         end
@@ -31,30 +32,49 @@ methods
         Sto.idx = 0;
     end
     
-    function saveStep(Sto)
+    function saveStep(Sto, time)
         %% Save Data 
         
-        col = 0;
+        % Increase table index
+        Sto.idx = Sto.idx + 1;
+        col = 1;
+        
+        Sto.data(Sto.idx, col) = time;
+        
         for varName = Sto.variables
             var = Sto.system.(varName);
-            nVar = numel(val);
+            nVar = numel(var);
             for k = 1 : nVar
                 Sto.data(Sto.idx, col + k) = var(k);
             end
             col = col + nVar;
         end
         
-        % Increase table index
-        Sto.idx = Sto.idx + 1;
     end
     
     function save(Sto, fileName)
-        %%
-        [dir,name,ext] = fileparts(fileName);
-        % check extension
-        % TO-DO save data to file
+        %% Save data in a file
         
-        % generate header
+        T = array2table(Sto.data);
+        T.Properties.VariableNames{1} = 'time';
+        
+        col = 1;
+        for varName = Sto.variables
+            var = Sto.system.(varName);
+            nVar = numel(var);
+            if nVar > 1
+                for k = 1 : nVar
+                    T.Properties.VariableNames{col + k} = char(varName + "_" + k);
+                end
+            else
+                T.Properties.VariableNames{col + 1} = char(varName);
+            end
+            col = col + nVar;
+        end
+        
+        
+        % save file
+        writetable(T, fileName)
         
     end
 end

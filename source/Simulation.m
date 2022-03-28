@@ -14,6 +14,9 @@ properties
     timeStart       double
     timeEnd         double
     timeStep        double
+    
+    nSteps          int32
+    elapsedTime     double
 end
 
 methods
@@ -39,17 +42,39 @@ methods
     function initialize(Sim)
         %%
         
+        Sim.time = Sim.timeStart;
+        Sim.nSteps = ceil((Sim.timeEnd - Sim.timeStart) / Sim.timeStep);
+        
+        Sim.system.initSystem();
+        
+        if ~isempty(Sim.storage)
+            Sim.storage.initData(Sim.nSteps + 1);
+            Sim.storage.saveStep(Sim.time); %save initial state
+        end
+    end
+    
+    function storage = initStorage(Sim)
+        %%
+        storage = Storage(Sim.system);
+        Sim.storage = storage;
     end
     
     function run(Sim)
-        %% RunSimulation
-        %	Returns whether or not the simulation succeeded
-        while Sim.time < Sim.timeEnd
+        %% Run Simulation
+        
+        for k = 1 : Sim.nSteps
+            
+            clock = tic;
             Sim.step();
-            Sim.storage.saveStep();
+            Sim.elapsedTime = toc(clock);
+            
+            if ~isempty(Sim.storage)
+                Sim.storage.saveStep(Sim.time);
+            end
             
             if ~isempty(Sim.viewer) && ishandle(Sim.viewer.figure)
                 Sim.viewer.update();
+                pause(Sim.timeStep - toc(clock));
             end
         end
         
@@ -59,10 +84,6 @@ methods
         %%
         if strcmp(Sim.integrator, "Euler")
             Sim.stepEuler();
-            
-        elseif strcmp(Sim.integrator, "ode45")
-            Sim.stepMatlab();
-            
         else
             error("Integrator not compatible.");
         end
@@ -70,31 +91,12 @@ methods
     
     
     function stepEuler(Sim)
-        %%
-        sys = Sim.system;
+        %% Step simulation using the Euler method
         
-        sys.updateSysDynamics();
+        %% TO-DO: implement the forward Euler time-stepping
+        % - Update system independent coordinates and velocities
+        % - Update model
         
-        M = sys.mass;
-        f = sys.force;
-        c = sys.coriolis;
-        
-        qdd = M \ (f - c);
-        
-        % update sys.cooDep 
-        
-    end
-    
-    
-    function stepMatlab(Sim)
-        %%
-        
-    end
-    
-    function storage = initStorage(Sim)
-        %%
-        storage = Storage(Sim.system);
-        Sim.storage = storage;
     end
 end
 end

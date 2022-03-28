@@ -14,8 +14,8 @@ b1 = Body();
 b1.mass                     = 1;
 b1.com                      = [0; 0]; % center of mass
 b1.inertia                  =  1;
-b1.geometry.points(:,1)     = [-length1 / 2; 0];
-b1.geometry.points(:,2)     = [+length1 / 2; 0];
+b1.geometry.points(:,1)     = [0; +length1 / 2];
+b1.geometry.points(:,2)     = [0; -length1 / 2];
 b1.geometry.lineColor       = 'r';
 b1.geometry.lineWidth       = 4;
 
@@ -24,8 +24,8 @@ b2 = Body();
 b2.mass                     = 1;
 b2.com                      = [0; 0]; % center of mass
 b2.inertia                  = 1;
-b2.geometry.points(:,1)     = [-length2 / 2; 0];
-b2.geometry.points(:,2)     = [+length2 / 2; 0];
+b2.geometry.points(:,1)     = [0; +length2 / 2];
+b2.geometry.points(:,2)     = [0; -length2 / 2];
 b2.geometry.lineColor       = 'b';
 b2.geometry.lineWidth       = 4;
 
@@ -48,14 +48,18 @@ j2.pointChild               = b2.geometry.points(:,1);
 % Angle between the first link and the ground
 c1 = Coordinate();
 c1.type                     = "angular";
-c1.component                = "Joint";
-c1.joint                    = j1;
+c1.component                = "Body";
+c1.body                     = b1;
+c1.initialPos               = pi/2;
+c1.initialVel               = 0;
 
 % Angle between the first and second link
 c2 = Coordinate();
 c2.type                     = "angular";
-c2.component                = "Joint";
-c2.joint                    = j2;
+c2.component                = "Body";
+c2.body                     = b2;
+c2.initialPos               = 0;
+c2.initialVel               = 0;
 
 % Add components to the model
 model.bodySet(1)            = b1;
