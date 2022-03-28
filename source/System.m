@@ -246,8 +246,8 @@ methods
             -(L1*L2*dth1^2*m2*sin(th1 - th2))/2];
         
         S.force = [...
-            - L1*g*m1*sin(th1) - L1*g*m2*sin(th1);
-            -L2*g*m2*sin(th2)];
+            -(1/2)*L1*g*m1*sin(th1) - L1*g*m2*sin(th1);
+            -(1/2)*L2*g*m2*sin(th2)];
         
         
         %% TO-DO: calulate system energy

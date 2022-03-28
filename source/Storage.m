@@ -54,6 +54,11 @@ methods
     
     function save(Sto, fileName)
         %% Save data in a file
+        writetable(Sto.getTable(), fileName)
+    end
+    
+    function T = getTable(Sto)
+        %% Make a table from data for easy variable access
         
         T = array2table(Sto.data);
         T.Properties.VariableNames{1} = 'time';
@@ -71,11 +76,6 @@ methods
             end
             col = col + nVar;
         end
-        
-        
-        % save file
-        writetable(T, fileName)
-        
     end
 end
 end
