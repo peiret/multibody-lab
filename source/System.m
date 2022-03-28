@@ -251,8 +251,8 @@ methods
         
         
         %% TO-DO: calulate system energy
-        % energyKin = 
-        % energyPot = 
+        S.energyKin = 1/2 * (m1*L1^2*dth1^2/4 + m2*L2^2*dth2^2/4 + m2*L1^2*dth1^2 + m2*L1*L2*dth2*dth1*cos(th2-th1) + I1*dth1^2 + I2*dth2^2);
+        S.energyPot = -(1/2)*m1*g*L1*cos(th1) - m2*g*(L1*cos(th1) + (1/2)*L2*cos(th2));
         
     end
     

@@ -96,6 +96,33 @@ methods
         %% TO-DO: implement the forward Euler time-stepping
         % - Update system independent coordinates and velocities
         % - Update model
+        sys = Sim.system;
+        
+        sys.updateSysDynamics();
+        
+        h = Sim.timeStep;
+        q = sys.cooInd;
+        dq = sys.velInd;
+        
+        M = sys.mass;
+        f = sys.force;
+        c = sys.coriolis;
+        
+        ddq = M \ (f - c);
+        
+        dq = dq + h * ddq;
+        q = q + h * dq;
+        
+        sys.cooInd = q;
+        sys.velInd = dq;
+        sys.accInd = ddq;
+        
+        % update sys.cooDep 
+        sys.solvePositionProb();
+        sys.updateModel();
+        
+        % update time
+        Sim.time = Sim.time + h;
         
     end
 end
