@@ -74,7 +74,7 @@ methods
             
             if ~isempty(Sim.viewer) && ishandle(Sim.viewer.figure)
                 Sim.viewer.update();
-                pause(Sim.timeStep - toc(clock));
+                pause(max(Sim.timeStep - toc(clock), 1E-6));
             end
         end
         
@@ -84,8 +84,9 @@ methods
         %%
         if strcmp(Sim.integrator, "Euler")
             Sim.stepEuler();
-        else
-            error("Integrator not compatible.");
+            
+        else % Use any other integrator function
+            feval(Sim.integrator, Sim);
         end
     end
     

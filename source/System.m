@@ -26,6 +26,8 @@ properties
     conPos % position-level contstraints
     conVel % velocity-level contstraints
     conJac % constraint jacobian
+    conCoriolis
+    conForce
     
     energyKin
     energyPot
@@ -51,6 +53,8 @@ methods
         S.velInd    = zeros(S.nInd, 1);
         S.accInd    = zeros(S.nInd, 1);
         
+        S.indJac    = zeros(S.nInd, S.nDep);
+        
         S.mass      = zeros(S.nDep, S.nDep);    % mass matrix
         S.coriolis  = zeros(S.nDep, 1);         % velocity dependant terms
         S.force     = zeros(S.nDep, 1);         % generalized applied forces
@@ -58,22 +62,11 @@ methods
         S.conPos  	= zeros(S.nCon, 1);         % position-level contstraints
         S.conVel  	= zeros(S.nCon, 1);         % velocity-level contstraints
         S.conJac  	= zeros(S.nCon, S.nDep);    % constraint jacobian
+        S.conCoriolis = zeros(S.nCon, 1);       % constraint acceleration terms 
+        S.conForce 	= zeros(S.nCon, 1);         % constraint forces (Lagrange multipliers)
         
         S.energyKin = 0;
         S.energyPot = 0;
-        
-    end
-    
-    function updateModel(S)
-        %% Update model kinematics
-        
-        for k = 1 : S.model.nBodies
-            S.model.bodySet(k).position	= S.cooDep(3*(k-1) + (1:2));
-            S.model.bodySet(k).velocity	= S.velDep(3*(k-1) + (1:2));
-            S.model.bodySet(k).angle   	= S.cooDep(3*(k-1) + 3);
-            S.model.bodySet(k).angVel 	= S.velDep(3*(k-1) + 3);
-            % TO-DO: update acceleration?
-        end
         
     end
     
@@ -86,6 +79,7 @@ methods
         
         S.updateSysVelocity();
         S.initVelocity();
+        S.solveVelocityProb();
         
     end
     
@@ -106,11 +100,28 @@ methods
     function updateSysPosition(S)
         %% Update system position based on the model
         
+        S.updateDependentCoordinates();
+        S.updateIndependentCoordinates();
+        S.updateConstraintPosition();
+    end
+    
+    function updateDependentCoordinates(S)
+        %% Update system dependent coordinates from model bodies
         for k = 1 : S.model.nBodies
             S.cooDep(3*(k-1) + (1:2))   = S.model.bodySet(k).position;
             S.cooDep(3*(k-1) + 3)       = S.model.bodySet(k).angle;
         end
-        
+    end
+    
+    function updateIndependentCoordinates(S)
+        %% Update system independent coordinates from model coordinates
+        for k = 1 : S.model.nCoordinates
+            S.cooInd(k) = S.model.coordinateSet(k).getValue();
+        end
+    end
+    
+    function updateConstraintPosition(S)
+        %% Update system constraint position from model joints
         idx = 0;
         for k = 1 : S.model.nJoints
             pos = S.model.jointSet(k).calcConstraintPos();
@@ -118,11 +129,6 @@ methods
             S.conPos(idx + (1:len)) = pos;
             idx = idx + len;
         end
-        
-        for k = 1 : S.model.nCoordinates
-            S.cooInd(k) = S.model.coordinateSet(k).getValue();
-        end
-        
     end
     
     function updateSysVelocity(S)
@@ -139,12 +145,40 @@ methods
         
     end
     
+    function updateModel(S)
+        %% Update model kinematics
+        
+        S.updateModelVelocity();
+        S.updateModelPosition();
+    end
+    
+    function updateModelPosition(S)
+        %% Update Model Position using dependent coordinates
+        
+        for k = 1 : S.model.nBodies
+            bodyIdx = 3*(k-1) + (1:3);
+            S.model.bodySet(k).setOrientation(S.cooDep(bodyIdx(3)));
+            S.model.bodySet(k).setCOMPosition(S.cooDep(bodyIdx(1:2)));
+        end
+        
+    end
+    
+    function updateModelVelocity(S)
+        %% Update Model Velocity using dependent coordinates
+        
+        for k = 1 : S.model.nBodies
+            bodyIdx = 3*(k-1) + (1:3);
+            S.model.bodySet(k).setAngularVelocity(S.velDep(bodyIdx(3)));
+            S.model.bodySet(k).setCOMVelocity(S.velDep(bodyIdx(1:2)));
+        end
+    end
+    
     function updateJacobians(S)
         %% Update system jacobian matrices
         
         S.calcConstraintJacobian();
         S.calcIndependentCoordJacobian();
-        
+        S.calcConstraintCoriolis();
     end
     
     function calcConstraintJacobian(S)
@@ -163,6 +197,28 @@ methods
                 rowIdx      = idx + (1:blkSize);
                 colIdx      = 3*(bodyIdx - 1) + (1:3);
                 S.conJac(rowIdx, colIdx) = blocks(:,:,j);
+            end
+            
+            idx = idx + blkSize;
+        end
+    end
+    
+    function calcConstraintCoriolis(S)
+        
+        S.conCoriolis = zeros(S.model.nConstraints, 1);
+        idx = 0;
+        
+        for k = 1 : S.model.nJoints
+            [blocks, bodies] = S.model.jointSet(k).getJacobianDerivativeBlocks();
+            nBlocks = length(bodies);
+            blkSize = size(blocks, 1);
+            
+            for j = 1 : nBlocks
+                bodyIdx     = find(S.model.bodySet == bodies(j));
+                rowIdx      = idx + (1:blkSize);
+                colIdx      = 3*(bodyIdx - 1) + (1:3);
+                
+                S.conCoriolis(rowIdx) = S.conCoriolis(rowIdx) + blocks(:,:,j) * S.velDep(colIdx);
             end
             
             idx = idx + blkSize;
@@ -188,7 +244,7 @@ methods
     end
     
     function solvePositionProb(S, cooInd_0)
-        %% Solve the position problem
+        %% Solve the position problem: calculate cooDep from cooInd
         
         if ~exist("cooInd_0", "var")
             cooInd_0 = S.cooInd;
@@ -213,50 +269,56 @@ methods
             stepSize = norm(q - S.cooDep);
 
             S.cooDep = q;
-            S.updateModel();
+            S.updateModelPosition();
 
             %viewer.update();
 
         end
     end
     
-    function updateSysDynamics(S)
-        %% Update system dynamic equations (mass matrix, forces, etc.)
+    function solveVelocityProb(S, velInd_0)
+        %% Solve the velocity problem: calculate velDep from velInd
         
-        m1 = S.model.bodySet(1).mass;
-        m2 = S.model.bodySet(2).mass;
-        I1 = S.model.bodySet(1).inertia;
-        I2 = S.model.bodySet(2).inertia;
-        L1 = norm(S.model.bodySet(1).geometry.points(:,1) - S.model.bodySet(1).geometry.points(:,2));
-        L2 = norm(S.model.bodySet(2).geometry.points(:,1) - S.model.bodySet(2).geometry.points(:,2));
+        if ~exist("velInd_0", "var")
+            velInd_0 = S.velInd;
+        end
         
-        th1 = S.cooInd(1);
-        th2 = S.cooInd(2);
-        dth1 = S.velInd(1);
-        dth2 = S.velInd(2);
-        
-        g = - S.model.gravity(2);
-        
-        S.mass = [...
-            I1 + (L1^2*m1)/4 + L1^2*m2,     (L1*L2*m2*cos(th1 - th2))/2;
-            (L1*L2*m2*cos(th1 - th2))/2,   	(m2*L2^2)/4 + I2];
-        
-        S.coriolis = [...
-            (L1*L2*dth2^2*m2*sin(th1 - th2))/2;
-            -(L1*L2*dth1^2*m2*sin(th1 - th2))/2];
-        
-        S.force = [...
-            -(1/2)*L1*g*m1*sin(th1) - L1*g*m2*sin(th1);
-            -(1/2)*L2*g*m2*sin(th2)];
-        
-        
-        %% TO-DO: calulate system energy
-        % energyKin = 
-        % energyPot = 
+        S.updateJacobians();
+        vel         = [velInd_0; zeros(S.nCon,1)];
+        Trans       = [S.indJac; S.conJac];
+        S.velDep    = Trans \ vel;
         
     end
     
+    function updateSysDynamics(S)
+        %% Update system dynamic equations (mass matrix, forces, etc.)
+        
+        calcMassMatrix(S);
+        calcGeneralizedForces(S);
+        
+    end
     
+    function calcMassMatrix(S)
+        %% Calculate Mass Matrix
+        
+        massDiag = zeros(S.nDep, 1);
+        for k = 1 : S.model.nBodies
+            body = S.model.bodySet(k);
+            bodyIdx = 3*(k-1) + (1:3);
+            massDiag(bodyIdx) = [body.mass; body.mass; body.inertia];
+        end
+        S.mass = diag(massDiag);
+    end
+    
+    function calcGeneralizedForces(S)
+        %%
+        
+        S.force = zeros(S.nDep, 1);
+        for k = 1 : S.model.nBodies
+            bodyIdx = 3*(k-1) + (1:3);
+            S.force(bodyIdx) = [S.model.gravity; 0];
+        end
+    end
     
 end % methods
 

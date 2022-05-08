@@ -54,7 +54,7 @@ methods
     
     function block = getJacobianBlockParent(J)
         %%
-        posGlob = J.parent.getPosGlobalAxes(J.pointParent);
+        posGlob = J.parent.getPosGlobalAxes(J.pointParent - J.parent.com);
         block = -[...
             1, 0, -posGlob(2);
             0, 1, +posGlob(1)];
@@ -62,10 +62,46 @@ methods
     
     function block = getJacobianBlockChild(J)
         %%
-        posGlob = J.child.getPosGlobalAxes(J.pointChild);
+        posGlob = J.child.getPosGlobalAxes(J.pointChild - J.child.com);
         block = [...
             1, 0, -posGlob(2);
             0, 1, +posGlob(1)];
+    end
+    
+    function [blocks, bodies] = getJacobianDerivativeBlocks(J)
+        %%
+        
+        if J.parent.fixed
+            blocks = J.getJacobianDerivBlockChild();
+            bodies = J.child;
+        elseif J.child.fixed
+            blocks = J.getJacobianDerivBlockParent();
+            bodies = J.parent;
+        else
+            blocks(:,:,1) = J.getJacobianDerivBlockParent();
+            blocks(:,:,2) = J.getJacobianDerivBlockChild();
+            bodies(1) = J.parent;
+            bodies(2) = J.child;
+        end
+            
+    end
+    
+    function block = getJacobianDerivBlockParent(J)
+        %%
+        posGlob = J.parent.getPosGlobalAxes(J.pointParent - J.parent.com);
+        angVel  = J.parent.angVel;
+        block = -[...
+            0, 0, -angVel * posGlob(1);
+            0, 0, -angVel * posGlob(2)];
+    end
+    
+    function block = getJacobianDerivBlockChild(J)
+        %%
+        posGlob = J.child.getPosGlobalAxes(J.pointChild - J.child.com);
+        angVel  = J.child.angVel;
+        block = [...
+            0, 0, -angVel * posGlob(1);
+            0, 0, -angVel * posGlob(2)];
     end
 end
 end
