@@ -108,8 +108,9 @@ methods
     function updateDependentCoordinates(S)
         %% Update system dependent coordinates from model bodies
         for k = 1 : S.model.nBodies
-            S.cooDep(3*(k-1) + (1:2))   = S.model.bodySet(k).position;
-            S.cooDep(3*(k-1) + 3)       = S.model.bodySet(k).angle;
+            bodyIdx = 3*(k-1) + (1:3);
+            S.cooDep(bodyIdx(1:2)) 	= S.model.bodySet(k).getCOMPosAbsolute();
+            S.cooDep(bodyIdx(3))   	= S.model.bodySet(k).angle;
         end
     end
     
@@ -133,23 +134,43 @@ methods
     
     function updateSysVelocity(S)
         %% Update system velocity based on the model
-        
+        S.updateDependentVelocity();
+        S.updateIndependentVelocity();
+        S.updateConstraintVelocity();
+    end
+    
+    function updateDependentVelocity(S)
+        %% Update system independent coordinates from model Bodies
         for k = 1 : S.model.nBodies
-            S.velDep(3*(k-1) + (1:2))   = S.model.bodySet(k).velocity;
-            S.velDep(3*(k-1) + 3)       = S.model.bodySet(k).angVel;
+            bodyIdx = 3*(k-1) + (1:3);
+            S.velDep(bodyIdx(1:2)) 	= S.model.bodySet(k).getCOMVelocity();
+            S.velDep(bodyIdx(3))  	= S.model.bodySet(k).angVel;
         end
-        
+    end
+    
+    function updateIndependentVelocity(S)
+        %% Update system dependent velocity from model coordinates
         for k = 1 : S.model.nCoordinates
             S.velInd(k) = S.model.coordinateSet(k).getVelocity();
         end
-        
+    end
+    
+    function updateConstraintVelocity(S)
+        %% Update system constraint position from model joints
+        idx = 0;
+        for k = 1 : S.model.nJoints
+            vel = S.model.jointSet(k).calcConstraintVel();
+            len = length(vel);
+            S.conVel(idx + (1:len)) = vel;
+            idx = idx + len;
+        end
     end
     
     function updateModel(S)
         %% Update model kinematics
         
-        S.updateModelVelocity();
         S.updateModelPosition();
+        S.updateModelVelocity();
     end
     
     function updateModelPosition(S)

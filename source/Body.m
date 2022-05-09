@@ -57,6 +57,11 @@ methods
         pos = Rot * pointRel + B.position;
     end
     
+    function pos = getCOMPosAbsolute(B)
+        %%
+        pos = B.getPosAbsolute(B.com);
+    end
+    
     function vel = getVelAbsolute(B, pointRel)
         %%
         pos = B.getPosAbsolute(pointRel);
@@ -100,6 +105,11 @@ methods
     function setCOMVelocity(B, vel)
         %%
         B.velocity = vel - B.angVel * [-B.com(2); B.com(1)];
+    end
+    
+    function vel = getCOMVelocity(B)
+        %% Get absolute point velocity from position in local frame
+        vel = B.velocity + B.angVel * [-B.com(2); B.com(1)];
     end
     
     function vel = getPointVelocity(B, pos)

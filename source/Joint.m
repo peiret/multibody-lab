@@ -33,6 +33,13 @@ methods
         posChild = J.child.getPosAbsolute(J.pointChild);
         pos = posChild - posParent;
     end
+
+    function vel = calcConstraintVel(J)
+        %%
+        velParent = J.parent.getPointVelocity(J.pointParent);
+        velChild = J.child.getPointVelocity(J.pointChild);
+        vel = velChild - velParent;
+    end
     
     function [blocks, bodies] = getJacobianBlocks(J)
         %%
