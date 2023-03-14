@@ -13,12 +13,14 @@ properties
     directionParent     (2,1) double
     directionChild      (2,1) double
 
+    nConstraints        double
 end
+
 methods
     function J = Joint()
         %% Constructor of the Joint class
 
-        J.type = "none";
+        J.type = "Abstract";
 
         J.pointParent       = [0; 0];
         J.pointChild        = [0; 0];
@@ -27,19 +29,6 @@ methods
 
     end
 
-    function pos = calcConstraintPos(J)
-        %%
-        posParent = J.parent.getPosAbsolute(J.pointParent);
-        posChild = J.child.getPosAbsolute(J.pointChild);
-        pos = posChild - posParent;
-    end
-
-    function vel = calcConstraintVel(J)
-        %%
-        velParent = J.parent.getPointVelocity(J.pointParent);
-        velChild = J.child.getPointVelocity(J.pointChild);
-        vel = velChild - velParent;
-    end
     
     function [blocks, bodies] = getJacobianBlocks(J)
         %%
@@ -57,22 +46,6 @@ methods
             bodies(2) = J.child;
         end
             
-    end
-    
-    function block = getJacobianBlockParent(J)
-        %%
-        posGlob = J.parent.getPosGlobalAxes(J.pointParent - J.parent.com);
-        block = -[...
-            1, 0, -posGlob(2);
-            0, 1, +posGlob(1)];
-    end
-    
-    function block = getJacobianBlockChild(J)
-        %%
-        posGlob = J.child.getPosGlobalAxes(J.pointChild - J.child.com);
-        block = [...
-            1, 0, -posGlob(2);
-            0, 1, +posGlob(1)];
     end
     
     function [blocks, bodies] = getJacobianDerivativeBlocks(J)
@@ -93,22 +66,21 @@ methods
             
     end
     
-    function block = getJacobianDerivBlockParent(J)
-        %%
-        posGlob = J.parent.getPosGlobalAxes(J.pointParent - J.parent.com);
-        angVel  = J.parent.angVel;
-        block = -[...
-            0, 0, -angVel * posGlob(1);
-            0, 0, -angVel * posGlob(2)];
-    end
+end
+
+methods (Abstract)
     
-    function block = getJacobianDerivBlockChild(J)
-        %%
-        posGlob = J.child.getPosGlobalAxes(J.pointChild - J.child.com);
-        angVel  = J.child.angVel;
-        block = [...
-            0, 0, -angVel * posGlob(1);
-            0, 0, -angVel * posGlob(2)];
-    end
+    pos = calcConstraintPos(J)
+
+    vel = calcConstraintVel(J)
+    
+    block = getJacobianBlockParent(J)
+    
+    block = getJacobianBlockChild(J)
+    
+    block = getJacobianDerivBlockParent(J)
+    
+    block = getJacobianDerivBlockChild(J)
+    
 end
 end

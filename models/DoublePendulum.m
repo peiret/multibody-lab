@@ -32,16 +32,14 @@ b2.geometry.lineColor       = 'b';
 b2.geometry.lineWidth       = 4;
 
 % Joint between the first link and the ground
-j1 = Joint();
-j1.type                     = "revolute";
+j1 = JointRevolute();
 j1.parent                   = model.ground;
 j1.child                    = b1;
 j1.pointParent              = [0; 0];
 j1.pointChild               = b1.geometry.points(:,1);
 
 % Joint between the first and second link
-j2 = Joint();
-j2.type                     = "revolute";
+j2 = JointRevolute();
 j2.parent                   = b1;
 j2.child                    = b2;
 j2.pointParent              = b1.geometry.points(:,2);

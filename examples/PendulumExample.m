@@ -31,8 +31,7 @@ body.geometry.lineWidth    	= 4;
 model.addBody(body);
 
 % Joint between the first link and the ground
-joint = Joint();
-joint.type              	= "revolute";
+joint = JointRevolute();
 joint.parent              	= model.ground;
 joint.child             	= body;
 joint.pointParent         	= [0; 0];

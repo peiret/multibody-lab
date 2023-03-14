@@ -13,7 +13,7 @@ properties
     nCoordinates    double
 
     bodySet         Body
-	jointSet        Joint
+	jointSet        Joint = JointRevolute
     coordinateSet   Coordinate
     
     ground          Body
@@ -35,6 +35,8 @@ methods
         M.nJoints           = 0;
         M.nCoordinates      = 0;
         M.nConstraints      = 0;
+        
+        M.jointSet = M.jointSet([]);
         
         M.ground            = Body();
         M.ground.name       = "ground";
@@ -71,12 +73,8 @@ methods
         
         % Calculate number of constraint equations
         M.nConstraints = 0;
-        for k = 1 : M.nJoints
-            if strcmp(M.jointSet(k).type, "revolute")
-                M.nConstraints = M.nConstraints + 2;
-            else
-                error("Joint %d type not supported", k);
-            end
+        for joint = M.jointSet
+            M.nConstraints = M.nConstraints + joint.nConstraints;
         end
         
         if (3 * M.nBodies > M.nCoordinates + M.nConstraints)
