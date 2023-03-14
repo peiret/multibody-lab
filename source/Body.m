@@ -9,7 +9,7 @@ properties
     com             (2,1) double
 
     % Appearance Properties
-    geometry        = struct('points', [], 'lineColor', '', 'lineWidth', 0);
+    geometry        Geometry
 
     % Kinematics
     position        (2,1) double
@@ -32,8 +32,7 @@ methods
         B.com = [0; 0]; % relative to body frame
         
         % Appearance Properties
-        B.geometry.points = [];
-        B.geometry.color = 'k';
+        B.geometry = Geometry(B);
         
         % Origin Kinematics
         B.position = [0; 0]; % position of the origin
@@ -43,6 +42,7 @@ methods
         B.angle    = 0; % rotation
         B.angVel   = 0; % angular velocity
         
+        B.geometry.body = B;
     end
     
     function pos = getPosGlobalAxes(B, pointRel)
@@ -54,7 +54,10 @@ methods
     function pos = getPosAbsolute(B, pointRel)
         %%
         Rot = B.getRotationMatrix();
-        pos = Rot * pointRel + B.position;
+        pos = zeros(size(pointRel));
+        for i = 1 : size(pos,2)
+            pos(:,i) = Rot * pointRel(:,i) + B.position;
+        end
     end
     
     function pos = getCOMPosAbsolute(B)

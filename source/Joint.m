@@ -2,16 +2,16 @@ classdef Joint < handle
 
 properties
     
-    name = ""
-    type
+    name                string
+    type                string
 
-    parent
-    child
+    parent              Body
+    child               Body
 
-    pointParent
-    pointChild
-    directionParent
-    directionChild
+    pointParent         (2,1) double
+    pointChild          (2,1) double
+    directionParent     (2,1) double
+    directionChild      (2,1) double
 
 end
 methods

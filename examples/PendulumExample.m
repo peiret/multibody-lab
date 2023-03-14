@@ -25,7 +25,7 @@ body.inertia              	= mass * length / 12;
 body.geometry.points(:,1)  	= [0; 0];
 body.geometry.points(:,2)  	= [length; 0];
 body.geometry.lineColor    	= 'b';
-body.geometry.lineWidth    	= 2;
+body.geometry.lineWidth    	= 4;
 
 % Add body to the model
 model.addBody(body);
@@ -55,6 +55,7 @@ model.addCoordinate(coord);
 % Initialize model and viewer
 model.initModel();
 model.initViewer([-1, +1], [-1, +1]);
+model.viewer.showAxes(false);
 
 %% Setup simulation parameters
 sim = Simulation(model);

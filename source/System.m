@@ -2,35 +2,38 @@ classdef System < handle
 
 properties
     
-    model
+    model       Model
     
     % Number of dependent and independent coordinates
-    nDep
-    nInd
-    nCon
+    nDep        (:,1) double
+    nInd        (:,1) double
+    nCon        (:,1) double
     
-    cooDep
-    velDep
-    accDep
+    % Dependent coordinates, velocities and accelerations
+    cooDep      (:,1) double
+    velDep      (:,1) double
+    accDep      (:,1) double
     
-    cooInd
-    velInd
-    accInd
+    % Independent coordinates, velocities and accelerations
+    cooInd      (:,1) double
+    velInd      (:,1) double
+    accInd      (:,1) double
     
-    indJac % Jacobian matrix of velocity transformation cooDep to cooInd
+    indJac      (:,:) double % Jacobian matrix of independent coordinates
     
-    mass % mass matrix
-    coriolis % velocity dependant terms
-    force % generalized applied forces
+    mass        (:,:) double % mass matrix
+    coriolis    (:,1) double % velocity dependant terms
+    force       (:,1) double % generalized applied forces
     
-    conPos % position-level contstraints
-    conVel % velocity-level contstraints
-    conJac % constraint jacobian
-    conCoriolis
-    conForce
+    conPos      (:,1) double % position-level contstraints
+    conVel      (:,1) double % velocity-level contstraints
+    conJac      (:,:) double % constraint jacobian
     
-    energyKin
-    energyPot
+    conCoriolis (:,1) double 
+    conForce    (:,1) double 
+    
+    energyKin   double
+    energyPot   double
     
 end % properties
 

@@ -2,13 +2,12 @@ classdef Viewer < handle
     
 properties
     
-    model
+    model           Model
     
     figure
-    axes
+    axes 
     
-    shapes = gobjects(0)
-    
+    geometrySet     Geometry
     
 end % properties
 
@@ -27,48 +26,49 @@ methods
         V.axes = gca;
         hold(V.axes, 'on');
         axis(V.axes, 'equal');
-        %axis(V.axes, 'off');
         
     end
     
     function initViewer(V)
         %% Update view
         
-        plot(V.axes, [0 1], [0 0], 'r');
-        plot(V.axes, [0 0], [0 1], 'g');
+        xline(V.axes, 0, 'k');
+        yline(V.axes, 0, 'k');
         
         for i = 1 : V.model.nBodies
-            body = V.model.bodySet(i);
-            geoAbs = body.getGeometryAbs();
-            
-            V.shapes(i) = plot(V.axes, geoAbs(1,:), geoAbs(2,:),...
-                'Color', body.geometry.lineColor,...
-                'LineWidth', body.geometry.lineWidth,...
-                'Marker', 'o',...
-                'MarkerSize', 12,...
-                'MarkerFaceColor', 'w');
+            V.addGeometry(V.model.bodySet(i).geometry);
+        end
+        
+        for g = V.geometrySet
+            g.plot(V.axes);
         end
 
     end
     
+    function addGeometry(V, geometry)
+        %% Add geometry to the viewer
+        V.geometrySet(end+1) = geometry;
+    end
+    
     function update(V)
         %%
-        for i = 1 : V.model.nBodies
-            body = V.model.bodySet(i);
-            geoAbs = body.getGeometryAbs();
-            shape = V.shapes(i);
-            
-            shape.XData = geoAbs(1,:);
-            shape.YData = geoAbs(2,:);
-            shape.Color = body.geometry.lineColor;
-            shape.LineWidth = body.geometry.lineWidth;
-            
+        for g = V.geometrySet
+            g.update();
         end
     end
     
     function clear(V)
         %%
         cla(V.axes);
+    end
+    
+    function showAxes(V, flag)
+        %% Show axis (true/false)
+        if ~exist('flag', 'var') || flag
+          	axis(V.axes, 'on');
+        else
+          	axis(V.axes, 'off');
+        end
     end
     
 end % methods
