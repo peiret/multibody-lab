@@ -32,10 +32,10 @@ methods
             Sim.system = model.system;
         end
         
-        Sim.integrator      = "none";
+        Sim.integrator      = "EulerImplicit";
         Sim.timeStart       = 0;
-        Sim.timeEnd         = 0;
-        Sim.timeStep        = 0;
+        Sim.timeEnd         = 1;
+        Sim.timeStep        = 0.01;
         
     end
     
@@ -85,19 +85,51 @@ methods
         if strcmp(Sim.integrator, "Euler")
             Sim.stepEuler();
             
+        elseif strcmp(Sim.integrator, "EulerImplicit")
+            Sim.stepEulerImplicit();
+            
+        elseif strcmp(Sim.integrator, "EulerImplicitCorrected")
+            Sim.stepEulerImplicitCorrected();
+            
         else % Use any other integrator function
             feval(Sim.integrator, Sim);
         end
     end
     
-    
     function stepEuler(Sim)
         %% Step simulation using the Euler method
+        Sim.system.updateSystem();
+        Sim.system.solveDynamics();
         
-        %% TO-DO: implement the forward Euler time-stepping
-        % - Update system independent coordinates and velocities
-        % - Update model
+        Sim.system.cooDep = Sim.system.cooDep + Sim.timeStep * Sim.system.velDep;
+        Sim.system.velDep = Sim.system.velDep + Sim.timeStep * Sim.system.accDep;
         
+        Sim.system.updateModel();
+    end
+    
+    function stepEulerImplicit(Sim)
+        %% Step simulation using the semi-implicit Euler method
+        Sim.system.updateSystem();
+        Sim.system.solveDynamics();
+        
+        Sim.system.velDep = Sim.system.velDep + Sim.timeStep * Sim.system.accDep;
+        Sim.system.cooDep = Sim.system.cooDep + Sim.timeStep * Sim.system.velDep;
+        
+        Sim.system.updateModel();
+    end
+    
+    function stepEulerImplicitCorrected(Sim)
+        %% Step simulation using the semi-implicit Euler method with corrected position
+        Sim.system.updateSystem();
+        Sim.system.solveDynamics();
+        
+        Sim.system.velDep = Sim.system.velDep + Sim.timeStep * Sim.system.accDep;
+        Sim.system.cooDep = Sim.system.cooDep + Sim.timeStep * Sim.system.velDep;
+        
+        Sim.system.updateModel();
+        Sim.system.updateIndependentCoordinates();
+        Sim.system.solvePositionProb();
+        Sim.system.updateModel();
     end
 end
 end

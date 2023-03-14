@@ -72,7 +72,7 @@ model.coordinateSet(1)      = c1;
 model.coordinateSet(2)      = c2;
 
 % Model must be initialized after adding components
-model.initializeModel();
+model.initModel();
 
 end
 

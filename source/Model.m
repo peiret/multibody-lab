@@ -19,6 +19,7 @@ properties
     ground          Body
 	gravity         (2,1) double
     
+    isInitialized   logical
     
 end
 
@@ -41,8 +42,26 @@ methods
         
         M.gravity           = [0; -9.81];
     end
-
-    function initializeModel(M)
+    
+    function addBody(M, body)
+        %% Add a body to the model
+        M.bodySet(end + 1) = body;
+        M.isInitialized = false;
+    end
+    
+    function addJoint(M, joint)
+        %% Add a joint to the model
+        M.jointSet(end + 1) = joint;
+        M.isInitialized = false;
+    end
+    
+    function addCoordinate(M, coordinate)
+        %% Add a coordinate to the model
+        M.coordinateSet(end + 1) = coordinate;
+        M.isInitialized = false;
+    end
+    
+    function initModel(M)
         %% Must be called after adding or removing model components
         % calculates number of bodies, joints, coordinates
         
@@ -66,7 +85,8 @@ methods
         elseif (3 * M.nBodies < M.nCoordinates + M.nConstraints)
             error("System constraints and coordinates are redundant");
         end
-
+        
+        M.isInitialized = true;
     end
     
     function system = initSystem(M)

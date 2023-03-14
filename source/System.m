@@ -83,6 +83,22 @@ methods
         
     end
     
+    function updateSystem(S)
+        %% Update System (from Model)
+        % Must be called before solving the system dynamics
+        S.updateSysPosition();
+        S.updateSysVelocity();
+        S.updateJacobians();
+        S.updateDynamics();
+    end
+    
+    function updateModel(S)
+        %% Update model kinematics
+        
+        S.updateModelPosition();
+        S.updateModelVelocity();
+    end
+    
     function initCoordinates(S)
         %%
         for k = 1 : S.model.nCoordinates
@@ -164,13 +180,6 @@ methods
             S.conVel(idx + (1:len)) = vel;
             idx = idx + len;
         end
-    end
-    
-    function updateModel(S)
-        %% Update model kinematics
-        
-        S.updateModelPosition();
-        S.updateModelVelocity();
     end
     
     function updateModelPosition(S)
@@ -311,7 +320,7 @@ methods
         
     end
     
-    function updateSysDynamics(S)
+    function updateDynamics(S)
         %% Update system dynamic equations (mass matrix, forces, etc.)
         
         calcMassMatrix(S);
@@ -339,6 +348,17 @@ methods
             bodyIdx = 3*(k-1) + (1:3);
             S.force(bodyIdx) = [S.model.gravity; 0];
         end
+    end
+    
+    function solveDynamics(S)
+        %% Solving the dynamic equations
+        % [ M -A'] [ accDep   ] = [ force - coriolis ]
+        % [ A  0 ] [ conForce ] = [ -conCoriolis     ]
+        
+        auxMat = S.conJac * (S.mass \ S.conJac');
+        auxVec = S.conJac * (S.mass \ (S.force - S.coriolis));
+        S.conForce = - auxMat \ (S.conCoriolis + auxVec);
+        S.accDep = S.mass \ (S.conJac' * S.conForce + S.force - S.coriolis);
     end
     
 end % methods
