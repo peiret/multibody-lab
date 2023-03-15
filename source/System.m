@@ -105,14 +105,14 @@ methods
     function initCoordinates(S)
         %%
         for k = 1 : S.model.nCoordinates
-            S.cooInd(k) = S.model.coordinateSet(k).initialPos;
+            S.cooInd(k) = S.model.coordinateSet(k).initValue;
         end
     end
     
     function initVelocity(S)
         %%
         for k = 1 : S.model.nCoordinates
-            S.velInd(k) = S.model.coordinateSet(k).initialVel;
+            S.velInd(k) = S.model.coordinateSet(k).initSpeed;
         end
     end
     
@@ -187,7 +187,6 @@ methods
     
     function updateModelPosition(S)
         %% Update Model Position using dependent coordinates
-        
         for k = 1 : S.model.nBodies
             bodyIdx = 3*(k-1) + (1:3);
             S.model.bodySet(k).setOrientation(S.cooDep(bodyIdx(3)));
@@ -198,7 +197,6 @@ methods
     
     function updateModelVelocity(S)
         %% Update Model Velocity using dependent coordinates
-        
         for k = 1 : S.model.nBodies
             bodyIdx = 3*(k-1) + (1:3);
             S.model.bodySet(k).setAngularVelocity(S.velDep(bodyIdx(3)));
@@ -259,8 +257,7 @@ methods
     end
     
     function calcIndependentCoordJacobian(S)
-        %% TO-DO
-        
+        %% Calculate Independent Coordinate Jacobian Matrix
         S.indJac = zeros(S.nInd, S.nDep);
         
         for k = 1 : S.model.nCoordinates

@@ -4,18 +4,18 @@ classdef Coordinate < handle
 properties
     
     name                string
-    component           string % = "Body", "Joint"
     type                string % = "angular", "cartesian"
     
-    % only one is necessary
     body                Body
-    joint               Joint
+    reference           Body % = ground by default
     
+    % For cartesian coordinates
     point               (2,1) double % on body
-    direction           (2,1) double % on ground
+    refPoint            (2,1) double % on reference
+    refDirection        (2,1) double % on reference
     
-    initialPos          double
-    initialVel          double
+    initValue         	double
+    initSpeed           double
     
 end
 
@@ -23,94 +23,73 @@ methods
     function C = Coordinate()
         %% Coorinate class constructor
         
-        C.point       = [0; 0];
-        C.direction   = [0; 0];
-        C.initialPos  = 0;
-        C.initialVel  = 0;
+        C.point         = [0; 0];
+        C.refDirection  = [1; 0];
+        C.initValue     = 0;
+        C.initSpeed    	= 0;
         
+    end
+    
+    function initCoordinate(C, model)
+        % Check coordinate type
+        if ~((C.type == "angular") || (C.type == "cartesian"))
+            error("Invalid coordinate type!")
+        end
+        
+        % Set ground as default reference
+        if ~numel(C.reference), C.reference = model.ground; end
+        
+        % Normalize direction
+        C.refDirection = C.refDirection / norm(C.refDirection);
     end
     
     function value = getValue(C)
         %%
-        if C.component == "Body"
-            if C.type == "angular"
-                value = C.body.angle;
-            elseif C.type == "cartesian"
-                pos = C.body.getPosAbsolute(C.point);
-                dir = C.direction / norm(C.direction);
-                value = pos' * dir;
-            else
-                error("Coordinate type not supported")
-            end
-        
-        elseif C.component == "Joint" 
-            if C.type == "angular"
-                value = C.joint.child.angle - C.joint.parent.angle;
-            else % elseif C.type == "cartesian"
-                % TO-DO support relative cartessian coordinates
-                error("Coordinate type not supported")
-            end
+        if C.type == "angular"
+            value = C.body.angle - C.reference.angle;
+            
+        elseif C.type == "cartesian"
+            posPoint = C.body.getPosAbsolute(C.point);
+            posRef   = C.reference.getPosAbsolute(C.refPoint);
+            dir      = C.reference.getVecGlobalAxes(C.refDirection);
+            value    = (posPoint - posRef)' * dir;
             
         else
-            error("Coordinate component not supported")
+            error("Invalid coordinate type!")
         end
     end
     
     function speed = getVelocity(C)
-        
-        if C.component == "Body"
-            
-            if C.type == "angular"
-                speed = C.body.angVel;
-                
-            elseif C.type == "cartesian"
-                vel = C.body.getVelAbsolute(C.point);
-                dir = C.direction / norm(C.direction);
-                speed = vel' * dir;
-            else
-                error("Coordinate type not supported")
-            end
-        
-        elseif C.component == "Joint" 
-            
-            if C.type == "angular"
-                speed = C.joint.child.angVel - C.joint.parent.angVel;
-                
-            else % elseif C.type == "cartesian"
-                % TO-DO support relative cartessian coordinates
-                error("Coordinate type not supported")
-            end
+        %%
+        if C.type == "angular"
+            speed = C.body.angVel - C.reference.angVel;
+
+        elseif C.type == "cartesian"
+            posPoint 	= C.body.getPosAbsolute(C.point);
+            velPoint    = C.body.getPointVelocity(C.point);
+            velRel      = C.reference.getVelocityRelInBody(posPoint, velPoint);
+            speed       = velRel' * C.refDirection;
             
         else
-            error("Coordinate component not supported")
+            error("Invalid coordinate type!")
         end
     end
     
     function [blocks,bodies] = getJacobianBlocks(C)
         %%
-        if C.component == "Body"
+        if C.reference.fixed
             blocks = C.getJacobianBlockBody();
             bodies = C.body;
-            
-        elseif C.component == "Joint"
-            
-            if C.joint.parent.fixed
-                blocks = C.getJacobianBlockJointChild();
-                bodies = C.joint.child;
-                
-            elseif C.joint.child.fixed
-                blocks = C.getJacobianBlockJointParent();
-                bodies = c.joint.parent;
-                
-            else
-                blocks(:,:,1) = C.getJacobianBlockJointParent();
-                blocks(:,:,2) = C.getJacobianBlockJointChild();
-                bodies(1) = C.joint.parent;
-                bodies(2) = C.joint.child;
-            end
-            
+
+        elseif C.body.fixed
+            blocks = C.getJacobianBlockReference();
+            bodies = C.reference;
+
         else
-            error("Coordinate component not supported")
+            blocks(:,:,1) = C.getJacobianBlockBody();
+            blocks(:,:,2) = C.getJacobianBlockReference();
+            bodies(1) = C.body;
+            bodies(2) = C.reference;
         end
     end
     
@@ -120,29 +99,29 @@ methods
             block = [0, 0, 1];
             
         elseif C.type == "cartesian"
-            posGlob = C.body.getPosGlobalAxes(C.point);
-            dir = C.direction / norm(C.direction);
-            block = dir' * [...
-                1, 0, -posGlob(2);
-                0, 1, +posGlob(1)];
+            dirVec    	= C.reference.getVecGlobalAxes(C.refDirection);
+            posBodyCOM 	= C.body.getCOMPosAbsolute();
+            posPoint  	= C.body.getPosAbsolute(C.point);
+            orthDist    = (posPoint - posBodyCOM)' * [dirVec(2); -dirVec(1)];
+        
+            block = [dirVec(1), dirVec(2), orthDist];
         else
             error("Coordinate type not supported")
         end
     end
     
-    function block = getJacobianBlockJointChild(C)
-        %%
-        if C.type == "angular"
-            block = [0, 0, 1];
-        else
-            error("Coordinate type not supported")
-        end
-    end
-    
-    function block = getJacobianBlockJointParent(C)
+    function block = getJacobianBlockReference(C)
         %%
         if C.type == "angular"
             block = [0, 0, -1];
+            
+        elseif C.type == "cartesian"
+            dirVec    	= C.reference.getVecGlobalAxes(C.refDirection);
+            posRefCOM 	= C.reference.getCOMPosAbsolute();
+            posPoint  	= C.body.getPosAbsolute(C.point);
+            orthDist    = (posPoint - posRefCOM)' * [dirVec(2); -dirVec(1)];
+        
+            block = -[dirVec(1), dirVec(2), orthDist];
         else
             error("Coordinate type not supported")
         end

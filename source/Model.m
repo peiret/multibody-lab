@@ -84,6 +84,10 @@ methods
             error("System constraints and coordinates are redundant");
         end
         
+        for coord = M.coordinateSet
+            coord.initCoordinate(M);
+        end
+        
         M.isInitialized = true;
     end
     

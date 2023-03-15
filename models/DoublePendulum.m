@@ -48,26 +48,24 @@ j2.pointChild               = b2.geometry.points(:,1);
 % Angle between the first link and the ground
 c1 = Coordinate();
 c1.type                     = "angular";
-c1.component                = "Body";
 c1.body                     = b1;
-c1.initialPos               = pi;
-c1.initialVel               = 0;
+c1.initValue                = pi;
+c1.initSpeed                = 0;
 
 % Angle between the first and second link
 c2 = Coordinate();
 c2.type                     = "angular";
-c2.component                = "Body";
 c2.body                     = b2;
-c2.initialPos               = pi/2;
-c2.initialVel               = 0;
+c2.initValue                = pi/2;
+c2.initSpeed                = 0;
 
 % Add components to the model
-model.bodySet(1)            = b1;
-model.bodySet(2)            = b2;
-model.jointSet(1)           = j1;
-model.jointSet(2)           = j2;
-model.coordinateSet(1)      = c1;
-model.coordinateSet(2)      = c2;
+model.addBody(b1);
+model.addBody(b2);
+model.addJoint(j1);
+model.addJoint(j2);
+model.addCoordinate(c1);
+model.addCoordinate(c2);
 
 % Model must be initialized after adding components
 model.initModel();

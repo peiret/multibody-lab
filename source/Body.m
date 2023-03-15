@@ -17,6 +17,8 @@ properties
     
     angle           double
     angVel          double
+    
+    rotMatrix       (2,2) double
 end
 
 methods
@@ -41,22 +43,34 @@ methods
         % Orientation
         B.angle    = 0; % rotation
         B.angVel   = 0; % angular velocity
+        B.updateRotationMatrix();
         
         B.geometry.body = B;
     end
     
-    function pos = getPosGlobalAxes(B, pointRel)
+    function vec = getVecGlobalAxes(B, vecRel)
         %%
-        Rot = B.getRotationMatrix();
-        pos = Rot * pointRel;
+        vec = B.rotMatrix * vecRel;
+    end
+    
+    function vec = getVectorRel(B, vecAbs)
+        %%
+        vec = B.rotMatrix' * vecAbs;
     end
     
     function pos = getPosAbsolute(B, pointRel)
         %%
-        Rot = B.getRotationMatrix();
         pos = zeros(size(pointRel));
         for i = 1 : size(pos,2)
-            pos(:,i) = Rot * pointRel(:,i) + B.position;
+            pos(:,i) = B.rotMatrix * pointRel(:,i) + B.position;
+        end
+    end
+    
+    function pos = getPositionRel(B, pointAbs)
+        %%
+        pos = zeros(size(pointAbs));
+        for i = 1 : size(pos,2)
+            pos(:,i) = B.rotMatrix' * (pointAbs(:,i) - B.position);
         end
     end
     
@@ -67,37 +81,35 @@ methods
     
     function vel = getVelAbsolute(B, pointRel)
         %%
-        pos = B.getPosAbsolute(pointRel);
+        pos = B.getVecGlobalAxes(pointRel);
         vel = B.velocity + B.angVel * [-pos(2); pos(1)];
     end
     
-    function R = getRotationMatrix(B)
-        %% Get rotation matrix
-        
+    function updateRotationMatrix(B)
+        %% Calculate rotation matrix with current orientation
         si = sin(B.angle);
         co = cos(B.angle);
-        R = [co, -si; si, co];
-        
+        B.rotMatrix = [co, -si; si, co];
     end
     
     function pointsAbs = getGeometryAbs(B)
         %% Get geometry points in absolute frame
         pointsRel = B.geometry.points;
         pointsAbs = zeros(size(pointsRel));
-        Rot = B.getRotationMatrix();
         for k = 1 : size(pointsAbs, 2)
-            pointsAbs(:,k) = Rot * pointsRel(:,k) + B.position;
+            pointsAbs(:,k) = B.rotMatrix * pointsRel(:,k) + B.position;
         end
     end
     
     function setOrientation(B, angle)
         %%
         B.angle = angle;
+        B.updateRotationMatrix();
     end
     
-    function setCOMPosition(B, pos)
+    function setCOMPosition(B, posAbs)
         %%
-        B.position = pos - B.getRotationMatrix() * B.com;
+        B.position = posAbs - B.rotMatrix * B.com;
     end
     
     function setAngularVelocity(B, omega)
@@ -107,19 +119,24 @@ methods
     
     function setCOMVelocity(B, vel)
         %%
-        B.velocity = vel - B.angVel * [-B.com(2); B.com(1)];
+        B.velocity = vel - B.angVel * B.rotMatrix * [-B.com(2); B.com(1)];
     end
     
     function vel = getCOMVelocity(B)
         %% Get absolute point velocity from position in local frame
-        vel = B.velocity + B.angVel * [-B.com(2); B.com(1)];
+        vel = B.getPointVelocity(B.com);
     end
     
-    function vel = getPointVelocity(B, pos)
+    function vel = getPointVelocity(B, posRel)
         %% Get absolute point velocity from position in local frame
-        vel = B.velocity + B.angVel * [-pos(2); pos(1)];
+        vel = B.velocity + B.angVel * B.rotMatrix * [-posRel(2); posRel(1)];
     end
     
+    function vel = getVelocityRelInBody(B, posAbs, velAbs)
+        %%
+        velTransport = B.getPointVelocity(B.getPositionRel(posAbs));
+        vel = B.getVectorRel(velAbs - velTransport);
+    end
 end % methods
 
 end % classdef

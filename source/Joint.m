@@ -1,4 +1,4 @@
-classdef Joint < handle
+classdef Joint < handle & matlab.mixin.Heterogeneous
 
 properties
     
