@@ -7,7 +7,16 @@ methods
         J.type = "Revolute";
         J.nConstraints = 2;
     end
-        
+    
+    function initJoint(J)
+        J.geometry = Geometry(J.child);
+        J.geometry.addPoint(J.pointChild);
+        J.geometry.lineColor = 'k';
+        J.geometry.lineWidth = 2;
+        J.geometry.marker = 'o';
+        J.geometry.markerSize = 10;
+    end
+    
     function pos = calcConstraintPos(J)
         %%
         posParent = J.parent.getPosAbsolute(J.pointParent);

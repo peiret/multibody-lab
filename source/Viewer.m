@@ -29,19 +29,28 @@ methods
         
     end
     
-    function initViewer(V)
+    function initViewer(V, xlim, ylim)
         %% Update view
+        if ~exist('xlim', 'var'), xlim = [-1,1]; end
+        if ~exist('ylim', 'var'), ylim = [-1,1]; end
         
-        xline(V.axes, 0, 'k');
-        yline(V.axes, 0, 'k');
+        plot(V.axes, xlim, [0, 0], 'k');
+        plot(V.axes, [0, 0], ylim, 'k');
         
-        for i = 1 : V.model.nBodies
-            V.addGeometry(V.model.bodySet(i).geometry);
+        for body = V.model.bodySet
+            V.addGeometry(body.geometry);
+        end
+        
+        for joint = V.model.jointSet
+            V.addGeometry(joint.geometry);
         end
         
         for g = V.geometrySet
             g.plot(V.axes);
         end
+        
+        V.axes.XLim = xlim;
+        V.axes.YLim = ylim;
 
     end
     

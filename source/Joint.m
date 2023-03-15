@@ -14,6 +14,8 @@ properties
     directionChild      (2,1) double
 
     nConstraints        double
+    
+    geometry            Geometry
 end
 
 methods

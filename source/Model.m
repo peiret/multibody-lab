@@ -74,6 +74,7 @@ methods
         % Calculate number of constraint equations
         M.nConstraints = 0;
         for joint = M.jointSet
+            joint.initJoint();
             M.nConstraints = M.nConstraints + joint.nConstraints;
         end
         
@@ -102,18 +103,8 @@ methods
     
     function viewer = initViewer(M, xLim, yLim)
         %%
-        
         viewer = Viewer(M);
-        viewer.initViewer();
-        
-        if exist("xLim", "var")
-            viewer.axes.XLim = xLim;
-        end
-        
-        if exist("yLim", "var")
-            viewer.axes.YLim = yLim;
-        end
-        
+        viewer.initViewer(xLim, yLim);
         M.viewer = viewer;
     end
 

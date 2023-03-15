@@ -7,6 +7,15 @@ methods
         J.type = "PinSlot";
         J.nConstraints = 1;
     end
+    
+    function initJoint(J)
+        J.geometry = Geometry(J.child);
+        J.geometry.addPoint(J.pointChild);
+        J.geometry.lineColor = 'k';
+        J.geometry.lineWidth = 2;
+        J.geometry.marker = 'o';
+        J.geometry.markerSize = 10;
+    end
         
     function pos = calcConstraintPos(J)
         %%

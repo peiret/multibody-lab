@@ -2,11 +2,16 @@ classdef Geometry < handle
     % GEOMETRY
     
 properties
-    points      (2,:) double
-    body        Body
+    points              (2,:) double
+    body                Body
     
-    lineWidth   double
-    lineColor   char
+    lineWidth           double      = 1
+    lineColor           char        = 'k'
+    
+    marker              char        = 'none'
+    markerSize          double      = 4
+    markerEdgeColor     char        = 'k'
+    markerFaceColor     char        = 'w'
     
     graphObject = gobjects(0)
 end
@@ -16,8 +21,6 @@ methods
         %%
         G.body      = fixedToBody;
         G.points    = zeros(2,0);
-        G.lineWidth = 1;
-        G.lineColor = 'k';
         
     end
     
@@ -37,7 +40,10 @@ methods
         G.graphObject = plot(plotAxes, pos(1,:), pos(2,:),...
                 'Color', G.lineColor,...
                 'LineWidth', G.lineWidth,...
-                'Marker', 'none');
+                'Marker', G.marker,...
+                'MarkerSize', G.markerSize,...
+                'MarkerFaceColor', G.markerFaceColor,...
+                'MarkerEdgeColor', G.markerEdgeColor);
     end
     
     function update(G)
