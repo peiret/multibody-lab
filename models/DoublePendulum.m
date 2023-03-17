@@ -1,9 +1,19 @@
-function model = DoublePendulum()
+function model = DoublePendulum(mass, length, angle, speed)
 % DOUBLE PENDULUM
 
 % Model Parameters
-length1 = 1;
-length2 = 1;
+if ~exist('mass', 'var')
+    mass = [1, 1];
+end
+if ~exist('length', 'var')
+    length = [1, 1];
+end
+if ~exist('angle', 'var')
+    angle = [pi/2, pi/2];
+end
+if ~exist('speed', 'var')
+    speed = [0, 0];
+end
 
 % Create model
 model = Model();
@@ -12,22 +22,22 @@ model.name = "double_pendulum";
 % First link of the pendulum
 b1 = Body();
 b1.name                     = "body_1";
-b1.mass                     = 1;
+b1.mass                     = mass(1);
 b1.com                      = [0; 0]; % center of mass
-b1.inertia                  =  1;
-b1.geometry.points(:,1)     = [0; +length1 / 2];
-b1.geometry.points(:,2)     = [0; -length1 / 2];
+b1.inertia                  = mass(1) * length(1)^2 / 12;
+b1.geometry.points(:,1)     = [0; +length(1) / 2];
+b1.geometry.points(:,2)     = [0; -length(1) / 2];
 b1.geometry.lineColor       = 'r';
 b1.geometry.lineWidth       = 4;
 
 % Second link of the pendulum
 b2 = Body();
 b2.name                     = "body_2";
-b2.mass                     = 1;
+b2.mass                     = mass(2);
 b2.com                      = [0; 0]; % center of mass
-b2.inertia                  = 1;
-b2.geometry.points(:,1)     = [0; +length2 / 2];
-b2.geometry.points(:,2)     = [0; -length2 / 2];
+b2.inertia                  = mass(2) * length(2)^2 / 12;
+b2.geometry.points(:,1)     = [0; +length(2) / 2];
+b2.geometry.points(:,2)     = [0; -length(2) / 2];
 b2.geometry.lineColor       = 'b';
 b2.geometry.lineWidth       = 4;
 
@@ -49,15 +59,16 @@ j2.pointChild               = b2.geometry.points(:,1);
 c1 = Coordinate();
 c1.type                     = "angular";
 c1.body                     = b1;
-c1.initValue                = pi;
-c1.initSpeed                = 0;
+c1.initValue                = angle(1);
+c1.initSpeed                = speed(1);
 
 % Angle between the first and second link
 c2 = Coordinate();
 c2.type                     = "angular";
 c2.body                     = b2;
-c2.initValue                = pi/2;
-c2.initSpeed                = 0;
+c2.reference                = b1;
+c2.initValue                = angle(2);
+c2.initSpeed                = speed(2);
 
 % Add components to the model
 model.addBody(b1);
@@ -69,6 +80,5 @@ model.addCoordinate(c2);
 
 % Model must be initialized after adding components
 model.initModel();
-
 end
 
