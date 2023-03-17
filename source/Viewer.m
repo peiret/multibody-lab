@@ -14,8 +14,8 @@ end % properties
 methods
     function V = Viewer(model)
         %% Viewer of a mutlibody model
-        
         V.model = model;
+        model.viewer = V;
         
         V.figure                = figure;
         V.figure.Units          = 'normalized';
@@ -24,18 +24,23 @@ methods
         V.figure.Color          = 'w';
         
         V.axes = gca;
-        hold(V.axes, 'on');
-        axis(V.axes, 'equal');
-        
     end
     
-    function initViewer(V, xlim, ylim)
+    function initViewer(V, xLim, yLim)
         %% Update view
-        if ~exist('xlim', 'var'), xlim = [-1,1]; end
-        if ~exist('ylim', 'var'), ylim = [-1,1]; end
+        if ~exist('xLim', 'var'), xLim = [-1,1]; end
+        if ~exist('yLim', 'var'), yLim = [-1,1]; end
         
-        plot(V.axes, xlim, [0, 0], 'k');
-        plot(V.axes, [0, 0], ylim, 'k');
+        % Reset axes
+        cla(V.axes);
+        hold(V.axes, 'on');
+        axis(V.axes, 'equal', 'off');
+        
+        % Reset geometrySet
+        V.geometrySet = V.geometrySet([]);
+        
+        plot(V.axes, [-0.2, 0.2], [0, 0], 'k');
+        plot(V.axes, [0, 0], [-0.2, 0.2], 'k');
         
         for body = V.model.bodySet
             V.addGeometry(body.geometry);
@@ -49,8 +54,8 @@ methods
             g.plot(V.axes);
         end
         
-        V.axes.XLim = xlim;
-        V.axes.YLim = ylim;
+        V.axes.XLim = xLim;
+        V.axes.YLim = yLim;
 
     end
     

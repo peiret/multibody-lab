@@ -46,6 +46,7 @@ methods
         Sim.nSteps = ceil((Sim.timeEnd - Sim.timeStart) / Sim.timeStep);
         
         Sim.system.initSystem();
+        Sim.system.updateModel();
         
         if ~isempty(Sim.storage)
             Sim.storage.initData(Sim.nSteps + 1);

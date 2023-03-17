@@ -24,28 +24,27 @@ end
 methods
     function B = Body()
         %% Body initialization
+        % Reset position and velocity
+        B.initBody();
         
-        % If the body is fixed to the ground
-        B.fixed = false;
-        
-        % Mechanical Properties:
-        B.mass = 1;
-        B.inertia = 1; % about the center of mass
-        B.com = [0; 0]; % relative to body frame
+        % Properties:
+        B.fixed     = false;    % If the body is fixed to the ground
+        B.mass      = 1;
+        B.inertia   = 1;        % about the center of mass
+        B.com       = [0; 0];   % relative to body frame
         
         % Appearance Properties
         B.geometry = Geometry(B);
-        
-        % Origin Kinematics
-        B.position = [0; 0]; % position of the origin
-        B.velocity = [0; 0]; % velocity of the origin
-        
-        % Orientation
-        B.angle    = 0; % rotation
-        B.angVel   = 0; % angular velocity
-        B.updateRotationMatrix();
-        
         B.geometry.body = B;
+    end
+    
+    function initBody(B)
+        %% Resets body position and velocity
+        B.position  = [0; 0];    % position of the origin
+        B.velocity  = [0; 0];    % velocity of the origin
+        B.angle     = 0;         % orientation
+        B.angVel    = 0;         % angular velocity
+        B.updateRotationMatrix();
     end
     
     function vec = getVecGlobalAxes(B, vecRel)

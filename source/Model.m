@@ -67,6 +67,14 @@ methods
         %% Must be called after adding or removing model components
         % calculates number of bodies, joints, coordinates
         
+        for body = M.bodySet
+            body.initBody();
+        end
+        
+        for coord = M.coordinateSet
+            coord.initCoordinate(M);
+        end
+        
         M.nBodies = length(M.bodySet);
         M.nJoints = length(M.jointSet);
         M.nCoordinates = length(M.coordinateSet);
@@ -85,27 +93,39 @@ methods
             error("System constraints and coordinates are redundant");
         end
         
-        for coord = M.coordinateSet
-            coord.initCoordinate(M);
+        if ~empty(M.system)
+            M.system.initSystem();
         end
-        
+        if ~empty(M.viewer)
+            M.viewer.update();
+        end
         M.isInitialized = true;
     end
     
     function system = initSystem(M)
-        %%
+        %% Initialize System from a model
+        if isempty(M.system)
+             M.system = System(M);
+        end
+        M.system.initSystem();
+        M.system.updateModel();
+        if ~isempty(M.viewer)
+             M.viewer.update();
+        end
         
-        system = System(M);
-        system.initSystem();
-        
-        M.system = system;
+        system = M.system;
     end
     
     function viewer = initViewer(M, xLim, yLim)
         %%
-        viewer = Viewer(M);
-        viewer.initViewer(xLim, yLim);
-        M.viewer = viewer;
+        if ~exist('xLim', 'var'), xLim = [-1,1]; end
+        if ~exist('yLim', 'var'), yLim = [-1,1]; end
+        
+        if isempty(M.viewer)
+             M.viewer = Viewer(M);
+        end
+        M.viewer.initViewer(xLim, yLim);
+        viewer = M.viewer;
     end
 
     function printReport(M)

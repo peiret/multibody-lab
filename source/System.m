@@ -42,6 +42,7 @@ methods
     %% System
         
         S.model     = model;
+        model.system = S;
         
         % Number of dependent and independent coordinates
         S.nDep      = 3 * model.nBodies;
@@ -75,15 +76,14 @@ methods
     
     function initSystem(S)
         %% Initialize Position and velocity to 
-        
+        % Update system position and solve position problem 
         S.updateSysPosition();
         S.initCoordinates();
         S.solvePositionProb();
-        
+        % Update system velocity and solve velocity problem 
         S.updateSysVelocity();
         S.initVelocity();
         S.solveVelocityProb();
-        
     end
     
     function updateSystem(S)
@@ -118,7 +118,6 @@ methods
     
     function updateSysPosition(S)
         %% Update system position based on the model
-        
         S.updateDependentCoordinates();
         S.updateIndependentCoordinates();
         S.updateConstraintPosition();
@@ -206,10 +205,8 @@ methods
     
     function updateJacobians(S)
         %% Update system jacobian matrices
-        
         S.calcConstraintJacobian();
         S.calcIndependentCoordJacobian();
-        S.calcConstraintCoriolis();
     end
     
     function calcConstraintJacobian(S)
@@ -300,9 +297,6 @@ methods
 
             S.cooDep = q;
             S.updateModelPosition();
-
-            %viewer.update();
-
         end
     end
     
@@ -317,20 +311,18 @@ methods
         vel         = [velInd_0; zeros(S.nCon,1)];
         Trans       = [S.indJac; S.conJac];
         S.velDep    = Trans \ vel;
-        
+        S.updateModelVelocity();
     end
     
     function updateDynamics(S)
         %% Update system dynamic equations (mass matrix, forces, etc.)
-        
         calcMassMatrix(S);
         calcGeneralizedForces(S);
-        
+        S.calcConstraintCoriolis();
     end
     
     function calcMassMatrix(S)
         %% Calculate Mass Matrix
-        
         massDiag = zeros(S.nDep, 1);
         for k = 1 : S.model.nBodies
             body = S.model.bodySet(k);

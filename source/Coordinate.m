@@ -37,7 +37,7 @@ methods
         end
         
         % Set ground as default reference
-        if ~numel(C.reference), C.reference = model.ground; end
+        if isempty(C.reference), C.reference = model.ground; end
         
         % Normalize direction
         C.refDirection = C.refDirection / norm(C.refDirection);
