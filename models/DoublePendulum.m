@@ -9,7 +9,7 @@ if ~exist('length', 'var')
     length = [1, 1];
 end
 if ~exist('angle', 'var')
-    angle = [pi/2, pi/2];
+    angle = [pi/4, pi/4];
 end
 if ~exist('speed', 'var')
     speed = [0, 0];
@@ -59,6 +59,7 @@ j2.pointChild               = b2.geometry.points(:,1);
 c1 = Coordinate();
 c1.type                     = "angular";
 c1.body                     = b1;
+c2.reference                = model.ground;
 c1.initValue                = angle(1);
 c1.initSpeed                = speed(1);
 
@@ -66,7 +67,7 @@ c1.initSpeed                = speed(1);
 c2 = Coordinate();
 c2.type                     = "angular";
 c2.body                     = b2;
-c2.reference                = b1;
+c2.reference                = model.ground;
 c2.initValue                = angle(2);
 c2.initSpeed                = speed(2);
 

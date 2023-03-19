@@ -37,6 +37,7 @@ methods
         Sim.timeEnd         = 1;
         Sim.timeStep        = 0.01;
         
+        Sim.storage = Storage(model.system);
     end
     
     function initialize(Sim)
@@ -52,12 +53,6 @@ methods
             Sim.storage.initData(Sim.nSteps + 1);
             Sim.storage.saveStep(Sim.time); %save initial state
         end
-    end
-    
-    function storage = initStorage(Sim)
-        %%
-        storage = Storage(Sim.system);
-        Sim.storage = storage;
     end
     
     function run(Sim)

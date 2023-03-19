@@ -93,10 +93,10 @@ methods
             error("System constraints and coordinates are redundant");
         end
         
-        if ~empty(M.system)
+        if ~isempty(M.system)
             M.system.initSystem();
         end
-        if ~empty(M.viewer)
+        if ~isempty(M.viewer)
             M.viewer.update();
         end
         M.isInitialized = true;
@@ -126,6 +126,14 @@ methods
         end
         M.viewer.initViewer(xLim, yLim);
         viewer = M.viewer;
+    end
+    
+    function update(M)
+        %% Update model position and velocity
+        if isempty(M.system)
+            M.initSystem()
+        end
+        M.system.updateModel();
     end
 
     function printReport(M)

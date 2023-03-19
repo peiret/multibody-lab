@@ -86,7 +86,7 @@ methods
         S.solveVelocityProb();
     end
     
-    function updateSystem(S)
+    function update(S)
         %% Update System (from Model)
         % Must be called before solving the system dynamics
         S.updateSysPosition();
@@ -97,7 +97,6 @@ methods
     
     function updateModel(S)
         %% Update model kinematics
-        
         S.updateModelPosition();
         S.updateModelVelocity();
     end
