@@ -8,7 +8,9 @@ properties
     viewer          Viewer
     storage         Storage
     
-    integrator      string % "Euler", "ode45", ...
+    integrator      string % "EulerExplicit" "EulerImplicit"
+    correctPosition logical
+    correctVelocity logical
     
     time            double
     timeStart       double
@@ -37,6 +39,9 @@ methods
         Sim.timeEnd         = 1;
         Sim.timeStep        = 0.01;
         
+        Sim.correctPosition = false;
+        Sim.correctVelocity = false;
+        
         Sim.storage = Storage(model.system);
     end
     
@@ -60,14 +65,24 @@ methods
         
         for k = 1 : Sim.nSteps
             
+            % Begin step
             clock = tic;
             Sim.step();
-            Sim.elapsedTime = toc(clock);
             
-            if ~isempty(Sim.storage)
-                Sim.storage.saveStep(Sim.time);
+            % Constraint correction after integration
+            if Sim.correctPosition, Sim.constraintPositionCorrection();
+            end
+            if Sim.correctVelocity, Sim.constraintVelocityCorrection();
             end
             
+            % End step
+            Sim.elapsedTime = toc(clock);
+            
+            % Save Storage
+            if ~isempty(Sim.storage), Sim.storage.saveStep(Sim.time);
+            end
+            
+            % Update Viewer
             if ~isempty(Sim.viewer) && ishandle(Sim.viewer.figure)
                 Sim.viewer.update();
                 pause(max(Sim.timeStep - toc(clock), 1E-6));
@@ -78,53 +93,50 @@ methods
     
     function step(Sim)
         %%
-        if strcmp(Sim.integrator, "Euler")
-            Sim.stepEuler();
+        if strcmp(Sim.integrator, "EulerExplicit")
+            Sim.stepEulerExplicit();
             
         elseif strcmp(Sim.integrator, "EulerImplicit")
             Sim.stepEulerImplicit();
-            
-        elseif strcmp(Sim.integrator, "EulerImplicitCorrected")
-            Sim.stepEulerImplicitCorrected();
             
         else % Use any other integrator function
             feval(Sim.integrator, Sim);
         end
     end
     
-    function stepEuler(Sim)
+    function stepEulerExplicit(Sim)
         %% Step simulation using the Euler method
-        Sim.system.updateSystem();
+        Sim.system.update();
         Sim.system.solveDynamics();
         
-        Sim.system.cooDep = Sim.system.cooDep + Sim.timeStep * Sim.system.velDep;
-        Sim.system.velDep = Sim.system.velDep + Sim.timeStep * Sim.system.accDep;
+        Sim.system.depenCoord = Sim.system.depenCoord + Sim.timeStep * Sim.system.depenVeloc;
+        Sim.system.depenVeloc = Sim.system.depenVeloc + Sim.timeStep * Sim.system.depenAccel;
         
         Sim.system.updateModel();
     end
     
     function stepEulerImplicit(Sim)
         %% Step simulation using the semi-implicit Euler method
-        Sim.system.updateSystem();
+        Sim.system.update();
         Sim.system.solveDynamics();
         
-        Sim.system.velDep = Sim.system.velDep + Sim.timeStep * Sim.system.accDep;
-        Sim.system.cooDep = Sim.system.cooDep + Sim.timeStep * Sim.system.velDep;
+        Sim.system.depenVeloc = Sim.system.depenVeloc + Sim.timeStep * Sim.system.depenAccel;
+        Sim.system.depenCoord = Sim.system.depenCoord + Sim.timeStep * Sim.system.depenVeloc;
         
         Sim.system.updateModel();
     end
     
-    function stepEulerImplicitCorrected(Sim)
-        %% Step simulation using the semi-implicit Euler method with corrected position
-        Sim.system.updateSystem();
-        Sim.system.solveDynamics();
-        
-        Sim.system.velDep = Sim.system.velDep + Sim.timeStep * Sim.system.accDep;
-        Sim.system.cooDep = Sim.system.cooDep + Sim.timeStep * Sim.system.velDep;
-        
-        Sim.system.updateModel();
+    function constraintPositionCorrection(Sim)
+        %% Correct the constraint position error
         Sim.system.updateIndependentCoordinates();
         Sim.system.solvePositionProb();
+        Sim.system.updateModel();
+    end
+    
+    function constraintVelocityCorrection(Sim)
+        %% Correct the constraint velocity error
+        Sim.system.updateIndependentVelocity();
+        Sim.system.solveVelocityProb();
         Sim.system.updateModel();
     end
 end

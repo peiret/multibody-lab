@@ -27,7 +27,7 @@ b1.com                      = [0; 0]; % center of mass
 b1.inertia                  = mass(1) * length(1)^2 / 12;
 b1.geometry.points(:,1)     = [0; +length(1) / 2];
 b1.geometry.points(:,2)     = [0; -length(1) / 2];
-b1.geometry.lineColor       = 'r';
+b1.geometry.lineColor       = 'k';
 b1.geometry.lineWidth       = 4;
 
 % Second link of the pendulum
@@ -38,7 +38,7 @@ b2.com                      = [0; 0]; % center of mass
 b2.inertia                  = mass(2) * length(2)^2 / 12;
 b2.geometry.points(:,1)     = [0; +length(2) / 2];
 b2.geometry.points(:,2)     = [0; -length(2) / 2];
-b2.geometry.lineColor       = 'b';
+b2.geometry.lineColor       = 'r';
 b2.geometry.lineWidth       = 4;
 
 % Joint between the first link and the ground

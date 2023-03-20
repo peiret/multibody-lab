@@ -65,9 +65,10 @@ model.viewer.showAxes(false);
 
 %% Setup simulation parameters
 sim = Simulation(model);
-sim.integrator  = "EulerImplicitCorrected";
+sim.integrator  = "EulerImplicit";
 sim.timeEnd     = 2;
 sim.timeStep    = 0.005;
+sim.correctPosition = true;
 
 % Initialize and run simulation
 sim.initialize();

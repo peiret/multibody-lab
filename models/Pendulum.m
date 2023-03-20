@@ -27,7 +27,7 @@ body.com                   	= [0; -length/2]; % center of mass
 body.inertia              	= mass * length^2 / 12;
 body.geometry.points(:,1)  	= [0; 0];
 body.geometry.points(:,2)  	= [0; -length];
-body.geometry.lineColor    	= 'b';
+body.geometry.lineColor    	= 'r';
 body.geometry.lineWidth    	= 4;
 
 % Add body to the model

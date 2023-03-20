@@ -10,14 +10,14 @@ properties
     nCon        (:,1) double
     
     % Dependent coordinates, velocities and accelerations
-    cooDep      (:,1) double
-    velDep      (:,1) double
-    accDep      (:,1) double
+    depenCoord      (:,1) double
+    depenVeloc      (:,1) double
+    depenAccel      (:,1) double
     
     % Independent coordinates, velocities and accelerations
-    cooInd      (:,1) double
-    velInd      (:,1) double
-    accInd      (:,1) double
+    indepCoord      (:,1) double
+    indepVeloc      (:,1) double
+    indepAccel      (:,1) double
     
     indJac      (:,:) double % Jacobian matrix of independent coordinates
     
@@ -25,12 +25,12 @@ properties
     coriolis    (:,1) double % velocity dependant terms
     force       (:,1) double % generalized applied forces
     
-    conPos      (:,1) double % position-level contstraints
-    conVel      (:,1) double % velocity-level contstraints
-    conJac      (:,:) double % constraint jacobian
+    constCoord      (:,1) double % position-level contstraints
+    constVeloc      (:,1) double % velocity-level contstraints
+    constJacob      (:,:) double % constraint jacobian
     
-    conCoriolis (:,1) double 
-    conForce    (:,1) double 
+    constCoriolis (:,1) double 
+    constForce    (:,1) double 
     
     energyKin   double
     energyPot   double
@@ -49,13 +49,13 @@ methods
         S.nInd      = 3 * model.nBodies - model.nConstraints;
         S.nCon      = model.nConstraints;
         
-        S.cooDep    = zeros(S.nDep, 1);
-        S.velDep    = zeros(S.nDep, 1);
-        S.accDep    = zeros(S.nDep, 1);
+        S.depenCoord    = zeros(S.nDep, 1);
+        S.depenVeloc    = zeros(S.nDep, 1);
+        S.depenAccel    = zeros(S.nDep, 1);
         
-        S.cooInd    = zeros(S.nInd, 1);
-        S.velInd    = zeros(S.nInd, 1);
-        S.accInd    = zeros(S.nInd, 1);
+        S.indepCoord    = zeros(S.nInd, 1);
+        S.indepVeloc    = zeros(S.nInd, 1);
+        S.indepAccel    = zeros(S.nInd, 1);
         
         S.indJac    = zeros(S.nInd, S.nDep);
         
@@ -63,11 +63,11 @@ methods
         S.coriolis  = zeros(S.nDep, 1);         % velocity dependant terms
         S.force     = zeros(S.nDep, 1);         % generalized applied forces
         
-        S.conPos  	= zeros(S.nCon, 1);         % position-level contstraints
-        S.conVel  	= zeros(S.nCon, 1);         % velocity-level contstraints
-        S.conJac  	= zeros(S.nCon, S.nDep);    % constraint jacobian
-        S.conCoriolis = zeros(S.nCon, 1);       % constraint acceleration terms 
-        S.conForce 	= zeros(S.nCon, 1);         % constraint forces (Lagrange multipliers)
+        S.constCoord  	= zeros(S.nCon, 1);         % position-level contstraints
+        S.constVeloc  	= zeros(S.nCon, 1);         % velocity-level contstraints
+        S.constJacob  	= zeros(S.nCon, S.nDep);    % constraint jacobian
+        S.constCoriolis = zeros(S.nCon, 1);       % constraint acceleration terms 
+        S.constForce 	= zeros(S.nCon, 1);         % constraint forces (Lagrange multipliers)
         
         S.energyKin = 0;
         S.energyPot = 0;
@@ -104,14 +104,14 @@ methods
     function initCoordinates(S)
         %%
         for k = 1 : S.model.nCoordinates
-            S.cooInd(k) = S.model.coordinateSet(k).initValue;
+            S.indepCoord(k) = S.model.coordinateSet(k).initValue;
         end
     end
     
     function initVelocity(S)
         %%
         for k = 1 : S.model.nCoordinates
-            S.velInd(k) = S.model.coordinateSet(k).initSpeed;
+            S.indepVeloc(k) = S.model.coordinateSet(k).initSpeed;
         end
     end
     
@@ -126,15 +126,15 @@ methods
         %% Update system dependent coordinates from model bodies
         for k = 1 : S.model.nBodies
             bodyIdx = 3*(k-1) + (1:3);
-            S.cooDep(bodyIdx(1:2)) 	= S.model.bodySet(k).getCOMPosAbsolute();
-            S.cooDep(bodyIdx(3))   	= S.model.bodySet(k).angle;
+            S.depenCoord(bodyIdx(1:2)) 	= S.model.bodySet(k).getCOMPosAbsolute();
+            S.depenCoord(bodyIdx(3))   	= S.model.bodySet(k).angle;
         end
     end
     
     function updateIndependentCoordinates(S)
         %% Update system independent coordinates from model coordinates
         for k = 1 : S.model.nCoordinates
-            S.cooInd(k) = S.model.coordinateSet(k).getValue();
+            S.indepCoord(k) = S.model.coordinateSet(k).getValue();
         end
     end
     
@@ -144,7 +144,7 @@ methods
         for k = 1 : S.model.nJoints
             pos = S.model.jointSet(k).calcConstraintPos();
             len = length(pos);
-            S.conPos(idx + (1:len)) = pos;
+            S.constCoord(idx + (1:len)) = pos;
             idx = idx + len;
         end
     end
@@ -160,15 +160,15 @@ methods
         %% Update system independent coordinates from model Bodies
         for k = 1 : S.model.nBodies
             bodyIdx = 3*(k-1) + (1:3);
-            S.velDep(bodyIdx(1:2)) 	= S.model.bodySet(k).getCOMVelocity();
-            S.velDep(bodyIdx(3))  	= S.model.bodySet(k).angVel;
+            S.depenVeloc(bodyIdx(1:2)) 	= S.model.bodySet(k).getCOMVelocity();
+            S.depenVeloc(bodyIdx(3))  	= S.model.bodySet(k).angVel;
         end
     end
     
     function updateIndependentVelocity(S)
         %% Update system dependent velocity from model coordinates
         for k = 1 : S.model.nCoordinates
-            S.velInd(k) = S.model.coordinateSet(k).getVelocity();
+            S.indepVeloc(k) = S.model.coordinateSet(k).getVelocity();
         end
     end
     
@@ -178,7 +178,7 @@ methods
         for k = 1 : S.model.nJoints
             vel = S.model.jointSet(k).calcConstraintVel();
             len = length(vel);
-            S.conVel(idx + (1:len)) = vel;
+            S.constVeloc(idx + (1:len)) = vel;
             idx = idx + len;
         end
     end
@@ -187,8 +187,8 @@ methods
         %% Update Model Position using dependent coordinates
         for k = 1 : S.model.nBodies
             bodyIdx = 3*(k-1) + (1:3);
-            S.model.bodySet(k).setOrientation(S.cooDep(bodyIdx(3)));
-            S.model.bodySet(k).setCOMPosition(S.cooDep(bodyIdx(1:2)));
+            S.model.bodySet(k).setOrientation(S.depenCoord(bodyIdx(3)));
+            S.model.bodySet(k).setCOMPosition(S.depenCoord(bodyIdx(1:2)));
         end
         
     end
@@ -197,8 +197,8 @@ methods
         %% Update Model Velocity using dependent coordinates
         for k = 1 : S.model.nBodies
             bodyIdx = 3*(k-1) + (1:3);
-            S.model.bodySet(k).setAngularVelocity(S.velDep(bodyIdx(3)));
-            S.model.bodySet(k).setCOMVelocity(S.velDep(bodyIdx(1:2)));
+            S.model.bodySet(k).setAngularVelocity(S.depenVeloc(bodyIdx(3)));
+            S.model.bodySet(k).setCOMVelocity(S.depenVeloc(bodyIdx(1:2)));
         end
     end
     
@@ -211,7 +211,7 @@ methods
     function calcConstraintJacobian(S)
         %% Calculate Constraint Velocity
         
-        S.conJac = zeros(S.model.nConstraints, S.model.nBodies);
+        S.constJacob = zeros(S.model.nConstraints, S.model.nBodies);
         idx = 0;
         
         for k = 1 : S.model.nJoints
@@ -223,7 +223,7 @@ methods
                 bodyIdx     = find(S.model.bodySet == bodies(j));
                 rowIdx      = idx + (1:blkSize);
                 colIdx      = 3*(bodyIdx - 1) + (1:3);
-                S.conJac(rowIdx, colIdx) = blocks(:,:,j);
+                S.constJacob(rowIdx, colIdx) = blocks(:,:,j);
             end
             
             idx = idx + blkSize;
@@ -232,7 +232,7 @@ methods
     
     function calcConstraintCoriolis(S)
         
-        S.conCoriolis = zeros(S.model.nConstraints, 1);
+        S.constCoriolis = zeros(S.model.nConstraints, 1);
         idx = 0;
         
         for k = 1 : S.model.nJoints
@@ -245,7 +245,7 @@ methods
                 rowIdx      = idx + (1:blkSize);
                 colIdx      = 3*(bodyIdx - 1) + (1:3);
                 
-                S.conCoriolis(rowIdx) = S.conCoriolis(rowIdx) + blocks(:,:,j) * S.velDep(colIdx);
+                S.constCoriolis(rowIdx) = S.constCoriolis(rowIdx) + blocks(:,:,j) * S.depenVeloc(colIdx);
             end
             
             idx = idx + blkSize;
@@ -269,14 +269,14 @@ methods
         
     end
     
-    function solvePositionProb(S, cooInd_0)
-        %% Solve the position problem: calculate cooDep from cooInd
+    function solvePositionProb(S, indepCoord_0)
+        %% Solve the position problem: calculate depenCoord from indepCoord
         
-        if ~exist("cooInd_0", "var")
-            cooInd_0 = S.cooInd;
+        if ~exist("indepCoord_0", "var")
+            indepCoord_0 = S.indepCoord;
         end
         
-        q = S.cooDep;
+        q = S.depenCoord;
         S.updateModel();
         
         epsilon = 1E-6;     % tolerance
@@ -285,31 +285,31 @@ methods
         while stepSize > epsilon
             
             S.updateJacobians();
-            J = [S.conJac; S.indJac];
+            J = [S.constJacob; S.indJac];
             
             S.updateSysPosition();
-            beta = [S.conPos; S.cooInd - cooInd_0];
+            beta = [S.constCoord; S.indepCoord - indepCoord_0];
 
             q = q - (J \ beta);
 
-            stepSize = norm(q - S.cooDep);
+            stepSize = norm(q - S.depenCoord);
 
-            S.cooDep = q;
+            S.depenCoord = q;
             S.updateModelPosition();
         end
     end
     
-    function solveVelocityProb(S, velInd_0)
-        %% Solve the velocity problem: calculate velDep from velInd
+    function solveVelocityProb(S, indepVeloc_0)
+        %% Solve the velocity problem: calculate depenVeloc from indepVeloc
         
-        if ~exist("velInd_0", "var")
-            velInd_0 = S.velInd;
+        if ~exist("indepVeloc_0", "var")
+            indepVeloc_0 = S.indepVeloc;
         end
         
         S.updateJacobians();
-        vel         = [velInd_0; zeros(S.nCon,1)];
-        Trans       = [S.indJac; S.conJac];
-        S.velDep    = Trans \ vel;
+        vel         = [indepVeloc_0; zeros(S.nCon,1)];
+        Trans       = [S.indJac; S.constJacob];
+        S.depenVeloc    = Trans \ vel;
         S.updateModelVelocity();
     end
     
@@ -343,13 +343,13 @@ methods
     
     function solveDynamics(S)
         %% Solving the dynamic equations
-        % [ M -A'] [ accDep   ] = [ force - coriolis ]
-        % [ A  0 ] [ conForce ] = [ -conCoriolis     ]
+        % [ M -A'] [ depenAccel   ] = [ force - coriolis ]
+        % [ A  0 ] [ constForce ] = [ -constCoriolis     ]
         
-        auxMat = S.conJac * (S.mass \ S.conJac');
-        auxVec = S.conJac * (S.mass \ (S.force - S.coriolis));
-        S.conForce = - auxMat \ (S.conCoriolis + auxVec);
-        S.accDep = S.mass \ (S.conJac' * S.conForce + S.force - S.coriolis);
+        auxMat = S.constJacob * (S.mass \ S.constJacob');
+        auxVec = S.constJacob * (S.mass \ (S.force - S.coriolis));
+        S.constForce = - auxMat \ (S.constCoriolis + auxVec);
+        S.depenAccel = S.mass \ (S.constJacob' * S.constForce + S.force - S.coriolis);
     end
     
 end % methods

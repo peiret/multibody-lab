@@ -24,7 +24,7 @@ body.com                   	= [length/2; 0]; % center of mass
 body.inertia              	= mass * length / 12;
 body.geometry.points(:,1)  	= [0; 0];
 body.geometry.points(:,2)  	= [length; 0];
-body.geometry.lineColor    	= 'b';
+body.geometry.lineColor    	= 'r';
 body.geometry.lineWidth    	= 4;
 
 % Add body to the model
@@ -57,9 +57,10 @@ model.viewer.showAxes(false);
 
 %% Setup simulation parameters
 sim = Simulation(model);
-sim.integrator  = "EulerImplicitCorrected";
+sim.integrator  = "EulerImplicit";
 sim.timeEnd     = 2;
 sim.timeStep    = 0.01;
+sim.correctPosition = true;
 
 % Initialize and run simulation
 sim.initialize();
