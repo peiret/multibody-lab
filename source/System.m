@@ -19,7 +19,7 @@ properties
     indepVeloc      (:,1) double
     indepAccel      (:,1) double
     
-    indJac      (:,:) double % Jacobian matrix of independent coordinates
+    indepJacob      (:,:) double % Jacobian matrix of independent coordinates
     
     mass        (:,:) double % mass matrix
     coriolis    (:,1) double % velocity dependant terms
@@ -57,7 +57,7 @@ methods
         S.indepVeloc    = zeros(S.nInd, 1);
         S.indepAccel    = zeros(S.nInd, 1);
         
-        S.indJac    = zeros(S.nInd, S.nDep);
+        S.indepJacob    = zeros(S.nInd, S.nDep);
         
         S.mass      = zeros(S.nDep, S.nDep);    % mass matrix
         S.coriolis  = zeros(S.nDep, 1);         % velocity dependant terms
@@ -254,7 +254,7 @@ methods
     
     function calcIndependentCoordJacobian(S)
         %% Calculate Independent Coordinate Jacobian Matrix
-        S.indJac = zeros(S.nInd, S.nDep);
+        S.indepJacob = zeros(S.nInd, S.nDep);
         
         for k = 1 : S.model.nCoordinates
             [blocks, bodies] = S.model.coordinateSet(k).getJacobianBlocks();
@@ -263,7 +263,7 @@ methods
             for j = 1 : nBlocks
                 bodyIdx     = find(S.model.bodySet == bodies(j));
                 colIdx      = 3*(bodyIdx - 1) + (1:3);
-                S.indJac(k, colIdx) = blocks(:,:,j);
+                S.indepJacob(k, colIdx) = blocks(:,:,j);
             end
         end
         
@@ -285,7 +285,7 @@ methods
         while stepSize > epsilon
             
             S.updateJacobians();
-            J = [S.constJacob; S.indJac];
+            J = [S.constJacob; S.indepJacob];
             
             S.updateSysPosition();
             beta = [S.constCoord; S.indepCoord - indepCoord_0];
@@ -308,7 +308,7 @@ methods
         
         S.updateJacobians();
         vel         = [indepVeloc_0; zeros(S.nCon,1)];
-        Trans       = [S.indJac; S.constJacob];
+        Trans       = [S.indepJacob; S.constJacob];
         S.depenVeloc    = Trans \ vel;
         S.updateModelVelocity();
     end
