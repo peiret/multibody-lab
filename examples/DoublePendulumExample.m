@@ -1,9 +1,5 @@
 clearvars
-close all % windows
-
-%currentFileDir = string(fileparts(matlab.desktop.editor.getActiveFilename));
-addpath("../models")
-addpath("../source")
+close all
 
 % Create double pendulum model
 model = DoublePendulum();

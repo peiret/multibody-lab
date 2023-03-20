@@ -1,7 +1,7 @@
 clearvars
 close all % windows
 
-% Create Euler's Pendulum model
+% Create Pendulum model
 
 % Model Parameters
 length = 1;
@@ -9,7 +9,7 @@ mass = 1;
 
 % Create model
 model = Model();
-model.name = "Euler's pendulum";
+model.name = "pendulum";
 
 % First link of the pendulum
 body = Body();
@@ -26,35 +26,24 @@ body.geometry.lineWidth    	= 4;
 model.addBody(body);
 
 % Joint between the first link and the ground
-joint = JointPinSlot();
+joint = JointRevolute();
 joint.parent              	= model.ground;
 joint.child             	= body;
 joint.pointParent         	= [0; 0];
 joint.pointChild           	= body.geometry.points(:,1);
-joint.directionParent       = [1; 0];
 
 % Add joint to model
 model.addJoint(joint);
 
 % Angle between the first link and the ground
-pos = Coordinate();
-pos.type                    = "cartesian";
-pos.body                    = body;
-pos.refPoint                = body.geometry.points(:,1);
-pos.refDirection            = [1; 0];
-pos.initValue               = 0;
-pos.initSpeed               = 0;
-
-% Angle between the first link and the ground
-rot = Coordinate();
-rot.type                    = "angular";
-rot.body                    = body;
-rot.initValue               = 0;
-rot.initSpeed               = 0;
+coord = Coordinate();
+coord.type               	= "angular";
+coord.body                	= body;
+coord.initValue             = 0;
+coord.initSpeed             = 0;
 
 % Add coordinate to model
-model.addCoordinate(pos);
-model.addCoordinate(rot);
+model.addCoordinate(coord);
 
 % Initialize model and viewer
 model.initModel();
@@ -65,12 +54,8 @@ model.viewer.showAxes(false);
 sim = Simulation(model);
 sim.integrator  = "EulerImplicit";
 sim.timeEnd     = 2;
-sim.timeStep    = 0.005;
-sim.correctPosition = true;
+sim.timeStep    = 0.01;
 
 % Initialize and run simulation
 sim.initialize();
 sim.run();
-
-
-

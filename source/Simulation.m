@@ -39,8 +39,8 @@ methods
         Sim.timeEnd         = 1;
         Sim.timeStep        = 0.01;
         
-        Sim.correctPosition = false;
-        Sim.correctVelocity = false;
+        Sim.correctPosition = true;
+        Sim.correctVelocity = true;
         
         Sim.storage = Storage(model.system);
     end
